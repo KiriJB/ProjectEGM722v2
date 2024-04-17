@@ -1,0 +1,13 @@
+name: ProjectEGM722v2
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pandas
+  - geopandas
+  - cartopy
+  - numpy
+  - matplotlib
+  - shapely
+  - pathlib
