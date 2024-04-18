@@ -16,11 +16,13 @@ band = dataset.GetRasterBand(1) #assuming one band
 elevation_data = band.ReadAsArray()#read band data into an array
 transform = dataset.GetGeoTransform()#convert from row/column data to coords.
 
+startLat, startLon = map(float, input("Enter start coordinates (x, y): ").split())
+endLat, endLon = map(float, input("Enter end coordinates (x, y): ").split())
 #variables to store the elevation profile start and end coordinates
-startLat = -7.122111  # longitude of point 1
-startLon = 54.843111  # latitude of point 1
-endLat = -7.125111   # longitude of point 2
-endLon = 54.691111  # latitude of point 2
+#startLat = -7.122111  # longitude of point 1
+#startLon = 54.843111  # latitude of point 1
+#endLat = -7.125111   # longitude of point 2
+#endLon = 54.691111  # latitude of point 2
 
 #store as tuples
 point1 = (startLat, startLon)
@@ -31,10 +33,7 @@ point2 = (endLat, endLon)
 x1, y1 = point1 #start
 x2, y2 = point2 #end
 
-
 num_points = 100 #can change this variable, number of sections cross section line should be split into
-#x_step = (x2 - x1) / num_points #calculate the x distance and divide by the number of points
-#y_step = (y2 - y1) / num_points #calculate the y distance and divide by the number of points
 
 #find distance between the 2 points and split into equal sections
 #to find equidistant height values along the cross section line
@@ -42,13 +41,10 @@ length = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
 distances = np.linspace(0, np.sqrt((x2 - x1)**2 + (y2 - y1)**2), num_points)
 
-#count = 1 #remove this, just for test purposes
 elevation_profile = [] #array to store elevation values for profile
 point_lon = []
 point_lat = []
 for dist in distances:
-    #print('count=', count)#test
-    #count = count + 1#test
     #Calculates the x and y coordinate of the point along the line at the current distance dist.
     x = x1 + dist * (x2 - x1) / np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
     y = y1 + dist * (y2 - y1) / np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
@@ -87,7 +83,6 @@ for index, row in gdf_pcs.iterrows():
 #use min and max elevation heights from the array for the y axis
 minHeight = min(elevation_profile)
 maxHeight = max(elevation_profile)
-
 
 # Extract h_distance (x) and Elevation (y) columns into a Pandas DataFrame
 x_y_data = gdf_pcs_copy[['h_distance', 'Elevation']]
