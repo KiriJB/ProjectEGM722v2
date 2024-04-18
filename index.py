@@ -12,11 +12,8 @@ csv_filename = Path(tif_file).stem #get name to give automatically created eleva
 
 dataset = gdal.Open(tif_file)
 crs = CRS.from_string(dataset.GetProjection())
-#print('crs=', crs)
-
 band = dataset.GetRasterBand(1) #assuming one band
 elevation_data = band.ReadAsArray()#read band data into an array
-#print('elevation_data=', elevation_data)
 transform = dataset.GetGeoTransform()#convert from row/column data to coords.
 
 #variables to store the elevation profile start and end coordinates
@@ -42,7 +39,7 @@ num_points = 100 #can change this variable, number of sections cross section lin
 #find distance between the 2 points and split into equal sections
 #to find equidistant height values along the cross section line
 length = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-#print('line length=', length)
+
 distances = np.linspace(0, np.sqrt((x2 - x1)**2 + (y2 - y1)**2), num_points)
 
 #count = 1 #remove this, just for test purposes
@@ -57,13 +54,11 @@ for dist in distances:
     y = y1 + dist * (y2 - y1) / np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
     point_lon.append(x)
     point_lat.append(y)
-    #print('x=', x)
-    #print('y=', y)
+
     #get pixel location of coordinates created above
     col = int((x - transform[0]) / transform[1])
     row = int((y - transform[3]) / transform[5])
 
-    #print('elevation_data[row, col]=', elevation_data[row, col])
     #Retrieve the elevation from the raster dataset at the specified row and column
     #and append it to the elevation_profile list
     elevation_profile.append(elevation_data[row, col]) #append height value from pixel
@@ -73,31 +68,30 @@ gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.Longitude, df.Latitude
 
 gdf.crs = {'init': 'epsg:4326'}
 #need to convert distances from decimal degrees to metres (WGS84 uses metres) to display meaningful
-# scale on the x axis
+#scale on the x axis
 gdf_pcs = gdf.to_crs(epsg=3857)
 
 #store distance for each point along the transection into an array
-gdf_pcs['h_distance'] = 0
+gdf_pcs_copy = gdf_pcs.copy()
+gdf_pcs_copy['h_distance'] = 0
+gdf_pcs_copy['Elevation'] = 0
+
+# Extracting the elevations from the DEM
 for index, row in gdf_pcs.iterrows():
-    temp = gdf_pcs.geometry[0].distance(gdf_pcs.geometry[index])
-    #print('temp=', temp)
-    gdf_pcs['h_distance'].loc[index] = temp
-    # Extracting the elevations from the DEM
+    #print('gdf_pcs.geometry[index]=', gdf_pcs.geometry[index])
+    #print('gdf_pcs.geometry[0].distance(gdf_pcs.geometry[index])=', gdf_pcs.geometry[0].distance(gdf_pcs.geometry[index]))
+    temp = gdf_pcs_copy.geometry.iloc[0].distance(gdf_pcs.geometry.iloc[index])
+    gdf_pcs_copy.loc[index, 'h_distance'] = int(temp)
+    gdf_pcs_copy.loc[index, 'Elevation'] = elevation_profile[index]
 
 #use min and max elevation heights from the array for the y axis
 minHeight = min(elevation_profile)
 maxHeight = max(elevation_profile)
 
-gdf_pcs['Elevation'] = 0
-#store height for each point along the transection into an array
-for index, row in gdf_pcs.iterrows():
-    gdf_pcs['Elevation'].loc[index] = elevation_profile[index]
-    #print('elevation_profile=', elevation_profile)
 
 # Extract h_distance (x) and Elevation (y) columns into a Pandas DataFrame
-x_y_data = gdf_pcs[['h_distance', 'Elevation']]
+x_y_data = gdf_pcs_copy[['h_distance', 'Elevation']]
 x_y_data.to_csv(r'data\ProjectCSV' + '\\' + csv_filename + '.csv')
-
 
 #display the geotiff image
 plt.figure(figsize=(8, 6))
@@ -108,6 +102,13 @@ maxy = transform[3]
 
 #display the GeoTiff with a color bar
 plt.imshow(elevation_data, extent=(minx, maxx, miny, maxy), cmap='terrain', aspect='auto')
+
+# Define the start and end points for the line
+line_points = [(startLat, startLon), (endLat, endLon)]
+# Draw the line
+x_coords, y_coords = zip(*line_points)
+
+plt.plot(x_coords, y_coords, color='red')
 plt.title('Geotiff Visualization')
 plt.xlabel('Longitude', fontweight='bold')
 plt.ylabel('Latitude', fontweight='bold')
@@ -115,7 +116,7 @@ plt.colorbar(label='Elevation (m)', shrink=0.7)
 
 #display the elevation profile
 plt.figure(figsize=(12, 4))
-plt.plot(gdf_pcs['h_distance'], gdf_pcs['Elevation'], color='mediumvioletred')
+plt.plot(gdf_pcs_copy['h_distance'], gdf_pcs_copy['Elevation'], color='mediumvioletred')
 plt.ylim(minHeight-10, maxHeight+10)
 plt.title('Elevation Profile')
 plt.xlabel('Distance (m)')
