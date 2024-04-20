@@ -6,8 +6,13 @@ dependencies:
   - python=3.9
   - pandas
   - geopandas
-  - cartopy
   - numpy
   - matplotlib
   - shapely
   - pathlib
+  - rasterio
+  - earthaccess
+  - osgeo
+  - os
+  
+  
