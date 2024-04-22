@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?><metadata>
+    <idinfo>
+        <citation>
+            <citeinfo>
+                <origin/>
+                <pubdate>20210802</pubdate>
+                <title>Maine State Boundary Polygon</title>
+                <geoform>vector digital data</geoform>
+            </citeinfo>
+        </citation>
+        <descript>
+            <abstract>Authoritative state boundary polygon for Maine mapped at the 1:24,000 scale.</abstract>
+            <purpose>Maine state boundary polygon.</purpose>
+        </descript>
+        <timeperd>
+            <timeinfo>
+                <sngdate>
+                    <caldate>20210802</caldate>
+                </sngdate>
+            </timeinfo>
+            <current>Data current as of August 2, 2021.</current>
+        </timeperd>
+        <status>
+            <progress>Complete</progress>
+            <update>As needed</update>
+        </status>
+        <spdom>
+            <bounding>
+                <westbc>-71.166757</westbc>
+                <eastbc>-66.849538</eastbc>
+                <northbc>47.460074</northbc>
+                <southbc>42.970774</southbc>
+            </bounding>
+        </spdom>
+        <keywords>
+            <theme>
+                <themekt>ISO 19115-1:2014</themekt>
+                <themekey>boundaries</themekey>
+            </theme>
+            <theme>
+                <themekt>Maine GIS Thesaurus-Theme</themekt>
+                <themekey>boundaries, towns, townships</themekey>
+            </theme>
+            <place>
+                <placekt>Maine GIS Thesaurus-Place</placekt>
+                <placekey>Maine</placekey>
+                <placekey>United States</placekey>
+            </place>
+        </keywords>
+        <accconst>None</accconst>
+        <useconst>Access: Public.Use: User assumes risk.</useconst>
+        <ptcontac>
+            <cntinfo>
+                <cntorgp>
+                    <cntorg>MEGIS</cntorg>
+                    <cntper>Maine Office of Geographic Information Systems</cntper>
+                </cntorgp>
+                <cntpos>GIS Coordinator</cntpos>
+                <cntaddr>
+                    <addrtype>mailing</addrtype>
+                    <address>State House Station #145</address>
+                    <city>Augusta</city>
+                    <state>ME</state>
+                    <postal>04333</postal>
+                    <country>US</country>
+                </cntaddr>
+                <cntvoice>207-624-7700</cntvoice>
+                <cntemail>OIT.Customer-Support@maine.gov</cntemail>
+                <hours>0800 - 1700 EST</hours>
+                <cntinst>Monday through Friday</cntinst>
+            </cntinfo>
+        </ptcontac>
+        <datacred>MaineIT GIS</datacred>
+        <native> Version 6.2 (Build 9200) ; Esri ArcGIS 10.6.1.9273</native>
+    </idinfo>
+    <dataqual>
+        <logic>The data are updated to reflect changes as soon as possible.</logic>
+        <complete>Data are updated to reflect changes as necessary in an ongoing process with no start and no end.</complete>
+        <lineage>
+            <procstep>
+                <procdesc>Updated metadata as part of rehosting updated data layers to ArcGIS Online.</procdesc>
+                <procdate>20210802</procdate>
+            </procstep>
+        </lineage>
+    </dataqual>
+    <spdoinfo>
+        <direct>Vector</direct>
+        <ptvctinf>
+            <sdtsterm>
+                <sdtstype>GT-polygon composed of chains</sdtstype>
+                <ptvctcnt>6204</ptvctcnt>
+            </sdtsterm>
+        </ptvctinf>
+    </spdoinfo>
+    <eainfo>
+        <detailed>
+            <enttyp>
+                <enttypl>State_Boundary_polys</enttypl>
+                <enttypd>polygon feature class</enttypd>
+                <enttypds>Environmental Systems Research Institute, Inc. (ESRI)</enttypds>
+            </enttyp>
+            <attr>
+                <attrlabl>OBJECTID</attrlabl>
+                <attrdef>Internal feature number.</attrdef>
+                <attrdefs>ESRI</attrdefs>
+                <attrdomv>
+                                        
+                    <udom>Sequential unique whole numbers that are automatically generated.</udom>
+                                    
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>LAND</attrlabl>
+                <attrdef>identifies land and non-land areas</attrdef>
+                <attrdefs>MEGIS</attrdefs>
+                <attrdomv>
+                                        
+                    <edom>
+                                                
+                        <edomvds>MEGIS</edomvds>
+                                            
+                    </edom>
+                                        
+                    <edom>
+                                                
+                        <edomv>Y</edomv>
+                                                
+                        <edomvd>Polygon represents land area</edomvd>
+                                                
+                        <edomvds>MEGIS</edomvds>
+                                            
+                    </edom>
+                                    
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>GlobalID</attrlabl>
+                <attrdef>A field of type UUID (Universal Unique Identifier) in which values are automatically assigned by the geodatabase when a row is created. The GlobalID field is necessary for maintaining object uniqueness across replicas. All feature classes and tables participating in one-way or two-way replication must contain the GlobalID field. This field is not editable and is automatically populated when it is added for existing data.</attrdef>
+                <attrdefs>http://support.esri.com/en/knowledgebase/GISDictionary/term/GlobalID</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>created_user</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>created_date</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>last_edited_user</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>last_edited_date</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>Shape</attrlabl>
+                <attrdef>Feature geometry.</attrdef>
+                <attrdefs>ESRI</attrdefs>
+                <attrdomv>
+                                        
+                    <udom>Coordinates defining the features.</udom>
+                                    
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>SHAPE.STArea()</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>SHAPE.STLength()</attrlabl>
+            </attr>
+        </detailed>
+        <overview>
+            <eaover>CNTY24 contains state and county boundaries for Maine. The coverage has polygon topology and was created in Arc/Info from METWP24 by a select on arcs coded TYPE = state, county, and coastline. Polygons in the coverage are labeled with COUNTY, CNTYCODE, TAG, LAND, ISLAND. Arcs in the coverage are coded for TYPE and LAND. Please note recommended feature level metadata items FMSRC, FMSRCORG, FMSRCDAT, FMPROCSS, FMUPDORG, FMUPDDAT have been added to the arc coding of this coverage to replace the item SOURCE. These items are intended for use in providing specific information about the source of changes to the location of arc features in the coverage and contain codes that cross reference the elements Source Citation Abbreviation, Source Publication Date, Process Step, Process Contact and Process Date in Federal Geographic Data Committee(FGDC) compliant metadata for the coverage. For more information related to feature level metadata see http://www.maine.gov/megis/policies/</eaover>
+            <eadetcit>The ArcView shapefile and ArcGIS geodatabase formats, commonly used for Maine GIS data, carry default identifiers and attributes that are software generated and/or important for internal recordkeeping. These are listed here to avoid repetition for every layer, and may not be repeated in the attribute descriptions and definitions of each layer. Common software generated identifiers and attributes in Maine GIS data include: FID (feature identifier), Shape (feature geometry), OBJECTID and SHAPE_lengt. In addition, most GIS formats will carry fields for PERIMETER, AREA and/or LENGTH according to feature geometry. These fields are typically available by default, with the units based on coordinate system or projection units of GIS data. Most GIS software packages also provide a means to calculate these values. It is important to test any columns containing PERIMETER, AREA or LENGTH values before using them for analysis purposes. These important values can be carried from format to format and become out-dated. Verify that the values are correct. Also, in your GIS software, please view the properties of data layers for the map units used to calculate these fields, and for the units set for display purposes.</eadetcit>
+        </overview>
+    </eainfo>
+    <distinfo>
+        <distrib>
+            <cntinfo>
+                <cntorgp>
+                    <cntorg>MEGIS</cntorg>
+                    <cntper>Maine Office of Geographic Information Systems</cntper>
+                </cntorgp>
+                <cntpos>GIS Coordinator</cntpos>
+                <cntaddr>
+                    <addrtype>mailing</addrtype>
+                    <address>State House Station #145</address>
+                    <city>Augusta</city>
+                    <state>ME</state>
+                    <postal>04333</postal>
+                    <country>US</country>
+                </cntaddr>
+                <cntvoice>207-624-7700</cntvoice>
+                <cntemail>OIT.Customer-Support@maine.gov</cntemail>
+                <hours>0800 - 1700 EST</hours>
+                <cntinst>Monday through Friday</cntinst>
+            </cntinfo>
+        </distrib>
+        <distliab>Disclaimer:
+Information provided by the Maine Office of Geographic Information Systems and Maine GeoLibrary on this site is accurate to the best of our knowledge and is subject to change on a regular basis. While the Maine Office of Geographic Information Systems makes every effort to provide useful and accurate information, we do not warrant the information to be, complete, factual, or timely. Information is provided on an "as is" and an "as available" basis. The State of Maine disclaims any liability, loss, injury, or damage incurred as a consequence, directly or indirectly, resulting from the use and application of any of the contents of this web site.</distliab>
+    </distinfo>
+    <metainfo>
+        <metd>20210802</metd>
+        <metc>
+            <cntinfo>
+                <cntorgp>
+                    <cntorg>MEGIS</cntorg>
+                    <cntper>Maine Office of Geographic Information Systems</cntper>
+                </cntorgp>
+                <cntpos>GIS Coordinator</cntpos>
+                <cntaddr>
+                    <addrtype>mailing</addrtype>
+                    <address>State House Station #145</address>
+                    <city>Augusta</city>
+                    <state>ME</state>
+                    <postal>04333</postal>
+                    <country>US</country>
+                </cntaddr>
+                <cntvoice>207-624-7700</cntvoice>
+                <cntemail>OIT.Customer-Support@maine.gov</cntemail>
+                <hours>0800 - 1700 EST</hours>
+                <cntinst>Monday through Friday</cntinst>
+            </cntinfo>
+        </metc>
+        <metstdn>FGDC Content Standard for Digital Geospatial Metadata</metstdn>
+        <metstdv>FGDC-STD-001-1998</metstdv>
+        <mettc>local time</mettc>
+        <metuc>Disclaimer:Information provided by the Maine Office of Geographic Information Systems and Maine GeoLibrary on this site is accurate to the best of our knowledge and is subject to change on a regular basis. While the Maine Office of Geographic Information Systems makes every effort to provide useful and accurate information, we do not warrant the information to be, complete, factual, or timely. Information is provided on an "as is" and an "as available" basis. The State of Maine disclaims any liability, loss, injury, or damage incurred as a consequence, directly or indirectly, resulting from the use and application of any of the contents of this web site.</metuc>
+    </metainfo>
+</metadata>

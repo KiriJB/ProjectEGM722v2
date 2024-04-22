@@ -18,10 +18,21 @@ to download DEM data for the area within those bounds'''
 def get_dem_data():
     try:
 
-        #boundary = gpd.read_file('Data\world-administrative-boundaries.shp') # liechtenstein
-        #boundary = gpd.read_file('Data\\Andorra_Country_Boundary.shp') # Andorra
-        #boundary = gpd.read_file('Data\\Counties.shp') # Northern Ireland
-        boundary = gpd.read_file('Data\\Djibouti_Country_Boundary.shp') # Djibouti
+        while True:
+            boundary = input('Enter the name of the Shapefile you wish to use for this analysis, from the Data folder (ie counties.shp):')
+            # Example shape files you could use that are stored in the data folder
+            # Liechtenstein_Country_Boundary.shp (liechtenstein)
+            # Andorra_Country_Boundary.shp (Andorra), Counties.shp (Northern Ireland)
+            # Djibouti_Country_Boundary.shp (Djibouti), Maine_State_Boundary_Polygon_Feature.shp(Maine, USA)
+
+            boundary_path = 'Data\\' + str(boundary)
+
+            if os.path.exists(boundary_path):
+                boundary = gpd.read_file(boundary_path)
+                print('Yay! File found, please wait while we find DEM data for this area from NASA Earthdata.')
+                break
+            else:
+                print('File does not exist. Please enter a valid filename. (ie. counties.shp)')
 
         boundary = boundary.to_crs(epsg=4326)
 
@@ -33,44 +44,43 @@ def get_dem_data():
 
         earthaccess.login(strategy='netrc')
         # search for datasets that match the keyword 'elevation'
-        # search for datasets that intersect Northern Ireland
+        # search for datasets that intersect the selected shapefile polygon area
         datasets = earthaccess.search_datasets(keyword='aster elevation',
                                                polygon=search_area.exterior.coords)
 
         dataset = datasets[0]  # get the first result
         dataset.get_umm('EntryTitle')  # fill this in with the metadata field that you want
 
-        ds_name = dataset.get_umm(
-            'ShortName')  # fill in the following with the correct field name to return the short name of the dataset
+        # fill in the following with the correct field name to return the short name of the dataset
+        ds_name = dataset.get_umm('ShortName')
 
         # search for ASTER GDEM v3 granules
         # search for images that intersect our search_area
         # only show the first 10 results
         results = earthaccess.search_data(short_name=ds_name,
-                                          polygon=search_area.exterior.coords, count=10)
-
-        length = len(results)
+                                          polygon=search_area.exterior.coords)
+        #polygon=search_area.exterior.coords, count=30)
         granule = next(iter(results))  # get the "first" item from the list
 
-
-
         # Create new folder to store DEM csv, png and TIF files
-        f_name = input("Enter name for folder, csv, png and tif files:")
+        print('We need to create a folder to store the DEM data in, and set \n file names for the CSV and PNG files that will be created.')
+        f_name = input("Please enter a name for the folder and files (eg Counties):")
         f_name = str(f_name)
         os.makedirs(f_name, exist_ok=True)
+
         # download each of the granules to the aster_gdem directory
         downloaded_files = earthaccess.download(results, f_name)
 
         dem_files = [fn for fn in downloaded_files if 'dem.tif' in fn]  # use list
-        print('dem_files=', dem_files)
+        #print('dem_files=', dem_files)
         # comprehension to select only filenames that match '*dem.tif'
         if len(dem_files) > 1:
-            # save mosaiced tif
+            # save mosaicked tif
             rio.merge.merge(dem_files, dst_path=f_name + '//ASTDTM_Mosaic.tif')
         else:
             if not Path(f_name + '//ASTDTM_Mosaic.tif').is_file():
                 os.rename(str(dem_files[0]), f_name + '//ASTDTM_Mosaic.tif')
-
+        print('ASTDTM_Mosaic.tif created.')
         return f_name
 
     except Exception as e:
@@ -80,9 +90,7 @@ def get_dem_data():
 # Read elevation data from a GeoTIFF file.
 def get_elevation_data(tif_file1):
     try:
-        print('tif_file1=', tif_file1)
         dataset = gdal.Open(tif_file1)
-        #dataset = gdal.Open("LIE_Data\ASTDTM_Mosaic.tif")
 
         band = dataset.GetRasterBand(1)  # assuming one band
         elevation_data_temp = band.ReadAsArray()  # read band data into an array
@@ -106,24 +114,30 @@ def onclick(event, elevation_data2, transform2):
             end_point = (event.xdata, event.ydata)
             click_count += 1
             print("Second point clicked:", end_point)
-            # Draw line between two points
+
+            # Draw line between two points on the DEM
             plt.plot([start_point[0], end_point[0]], [start_point[1], end_point[1]], color='red')
             plt.draw()
+            plt.savefig(f_name + '\\' + f_name + 'DEM.png')
+            print("PNG image file of the DEM created and stored in Data\\" + f_name + '\\' + f_name + 'DEM.png.')
 
-            # 3 Store elevation values into an array
+            # Store elevation values into an array
             distances_t, elevation_profile_t, point_lat_t, point_lon_t = interpolate_elevation(elevation_data2,
                                                                                                transform2, start_point,
                                                                                                end_point)
 
-            # 4 Convert decimal degree distances to metres from start point
+            # Convert decimal degree distances to metres from start point
             gdf_pcs_copy, min_height, max_height = convert_distance_to_metres(point_lat_t, point_lon_t,
                                                                               elevation_profile_t)
 
-            # 5 Display elevation profile
+            # Display elevation profile
             display_elevation_profile(gdf_pcs_copy, start_point, end_point, min_height, max_height)
 
-            # 6 Create CSV with Height and Distance values for the elevation profile
+            # Create CSV with Height and Distance values for the elevation profile
             create_csv(gdf_pcs_copy)
+
+            print('THE END!')
+
 
     except Exception as e:
         print("An error occurred in the onclick function:", e)
@@ -151,12 +165,14 @@ def display_tiff(transform1, elevation_data1):
                                            lambda event: onclick(event, elevation_data1, transform1))
 
         cursor = Cursor(plt.gca(), useblit=True, color='red', linewidth=1)
+
         print("Click 2 points on the map to draw a line for the elevation profile.")
+
         plt.show()
+
 
     except Exception as e:
         print('An error occurred in the display_tiff function.', e)
-
 
 
 def check_integer():
@@ -175,18 +191,17 @@ def check_integer():
 
     return val
 
-'''Interpolate elevation data for x points between the 2 start and end points, number of points is a variable,
-    more points means a more accurate elevation profile'''
 
+'''Interpolate elevation data for x points between the 2 start and end points, number of points is a variable,
+    more points mean a more accurate elevation profile'''
 
 def interpolate_elevation(elevation_data1, transform1, point1, point2):
     try:
         x1, y1 = point1  # start
         x2, y2 = point2  # end
 
-
         num_points = check_integer()
-        #print('num points=', num_points)
+        # print('num points=', num_points)
 
         # find distance between the 2 points and split into equal sections
         # to find equidistant height values along the cross-section line
@@ -214,13 +229,13 @@ def interpolate_elevation(elevation_data1, transform1, point1, point2):
     except Exception as e:
         print('An error occurred in the interpolate_elevation function.', e)
 
-
+#convert distance in decimal degrees to metres
 def convert_distance_to_metres(point_lat1, point_lon1, elevation_profile2):
     try:
         df = pd.DataFrame({'Latitude': point_lat1, 'Longitude': point_lon1})
         gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.Longitude, df.Latitude))
 
-        gdf.crs = ('epsg:4326')
+        gdf.crs = 'epsg:4326'
         # need to convert distances from decimal degrees to metres (WGS84 uses metres) to display meaningful
         # scale on the x-axis
         gdf_pcs = gdf.to_crs(epsg=3857)
@@ -231,15 +246,25 @@ def convert_distance_to_metres(point_lat1, point_lon1, elevation_profile2):
         gdf_pcs_copy['h_distance'] = 0  # x axis
         gdf_pcs_copy['Elevation'] = 0  # y axis
 
+
+        distance_array = []
+
         # Extracting the elevations from the DEM
         for index, row in gdf_pcs.iterrows():
             temp = gdf_pcs_copy.geometry.iloc[0].distance(gdf_pcs.geometry.iloc[index])
+            distance_array.append(int(temp))
+            print('temp=', int(temp))
             gdf_pcs_copy.loc[index, 'h_distance'] = int(temp)
             gdf_pcs_copy.loc[index, 'Elevation'] = elevation_profile2[index]
+
 
         # use min and max elevation heights from the array for the y-axis
         min_height = min(elevation_profile2)
         max_height = max(elevation_profile2)
+
+        max_distance = max(distance_array)  # get the furthest distance
+        print('max_distance=', max_distance)
+
         return gdf_pcs_copy, min_height, max_height
 
     except Exception as e:
@@ -252,6 +277,7 @@ def create_csv(gdf_pcs_copy1):
         # Extract h_distance (x) and Elevation (y) columns into a Pandas DataFrame
         x_y_data = gdf_pcs_copy1[['h_distance', 'Elevation']]
         x_y_data.to_csv(r'' + f_name + '\\' + f_name + '.csv')
+        print('CSV file of elevation data for profile created Data\\' + f_name + '\\' + f_name + '.csv')
     except Exception as e:
         print("An error occurred in the create_csv function.", e)
 
@@ -268,21 +294,24 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
         plt.ylabel('Elevation (m)', fontweight='bold')
         plt.grid(True)
         plt.savefig(f_name + '\\' + f_name + 'plot.png')
+        print("PNG image file of the elevation profile created and stored in Data\\" + f_name + '\\' + f_name + 'plot.png')
         plt.show()
+
     except Exception as e:
         print('An error occurred in the display_elevation_profile function.', e)
-
 
 # Enable GDAL exceptions handling
 gdal.UseExceptions()
 
 f_name = get_dem_data()
 
-# 1 Open geotiff and read contents into 2d array
+# Open geotiff and read contents into 2d array
 tif_file = f_name + '\\ASTDTM_Mosaic.tif'
 elevation_data, transform = get_elevation_data(tif_file)
 
-# 2 Display GeoTiff
 click_count, start_point, end_point = 0, [0, 0], [0, 0]
 
+# Display GeoTiff
 display_tiff(transform, elevation_data)
+
+
