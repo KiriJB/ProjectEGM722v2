@@ -283,16 +283,17 @@ def create_csv(gdf_pcs_copy1):
 
 
 def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_height, max_dist):
-    global t_list
+    global t_list, new_count
     try:
-
         number_of_plots = 0
         if max_dist < 3000:
             number_of_plots = 1
-        elif (max_dist >= 3000):
+        elif max_dist >= 3000:
             number_of_plots = math.floor(max_dist / 3000) + 1
 
-        #num_lists = number_of_plots
+        fig, ax = plt.subplots(number_of_plots, 1, figsize=(12, 5 * number_of_plots))
+        fig.suptitle('Elevation Profile \n' + str(round(point1[0], 6)) + ', ' + str(round(point1[1], 6)) +
+                     ' to ' + str(round(point2[0], 6)) + ', ' + str(round(point2[1], 6)), fontweight='bold')
 
         # Filter items less than 3000
         n = 1
@@ -305,30 +306,20 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
                 new_count = add_count
             elif n > 1:
                 t_list = gdf_pcs_copy[(gdf_pcs_copy['h_distance'] > (new_count + 1)) &
-                                       (gdf_pcs_copy['h_distance'] < (new_count + add_count))]
+                                      (gdf_pcs_copy['h_distance'] < (new_count + add_count))]
                 new_count = new_count + add_count
 
-            n += 1
             sub_list.append(gpd.GeoDataFrame(t_list))
 
-        fig, ax = plt.subplots(number_of_plots, 1, figsize=(12, 5 * number_of_plots))
-        fig.suptitle('Elevation Profile \n' + str(round(point1[0], 6)) + ', ' + str(round(point1[1], 6)) +
-                     ' to ' + str(round(point2[0], 6)) + ', ' + str(round(point2[1], 6)), fontweight='bold')
-
-        for counter in range(number_of_plots):
             # add every single subplot to the figure with a for loop
-            ax[counter].plot(sub_list[counter]['h_distance'], sub_list[counter]['Elevation'],
-                             color='mediumvioletred')
-            '''if counter < number_of_plots:
-                ax[counter].axis('equal')
-            elif counter == number_of_plots:
-                ax[counter].set_aspect('equal', 'box')'''
-
-            ax[counter].set_ylim(min_height - 20, max_height + 20)
-            ax[counter].set_xlim()
-            ax[counter].set_xlabel('Distance (m)', fontweight='bold')
-            ax[counter].set_ylabel('Elevation (m)', fontweight='bold')
-            ax[counter].grid(True)
+            ax[n-1].plot(sub_list[n-1]['h_distance'], sub_list[n-1]['Elevation'], color='mediumvioletred')
+            ax[n-1].set_ylim(min_height - 20, max_height + 20)
+            ax[n-1].set_xlim(new_count - add_count, new_count)
+            ax[n-1].set_xlabel('Distance (m)', fontweight='bold')
+            ax[n-1].set_ylabel('Elevation (m)', fontweight='bold')
+            ax[n-1].grid(True)
+            fig.tight_layout()
+            n += 1
 
         plt.savefig(f_name + '\\' + f_name + 'plot.png')
         print("PNG image file of the elevation profile created and stored in Data"
