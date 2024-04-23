@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 from matplotlib.widgets import Cursor
+import math
 import os
 
 '''upload a polygon shapefile to obtain boundary coordinates to search the earth access database with
@@ -19,7 +20,8 @@ def get_dem_data():
     try:
 
         while True:
-            boundary = input('Enter the name of the Shapefile you wish to use for this analysis, from the Data folder (ie counties.shp):')
+            boundary = input(
+                'Enter the name of the Shapefile you wish to use for this analysis, from the Data folder (ie counties.shp):')
             # Example shape files you could use that are stored in the data folder
             # Liechtenstein_Country_Boundary.shp (liechtenstein)
             # Andorra_Country_Boundary.shp (Andorra), Counties.shp (Northern Ireland)
@@ -59,11 +61,12 @@ def get_dem_data():
         # only show the first 10 results
         results = earthaccess.search_data(short_name=ds_name,
                                           polygon=search_area.exterior.coords)
-        #polygon=search_area.exterior.coords, count=30)
+        # polygon=search_area.exterior.coords, count=30)
         granule = next(iter(results))  # get the "first" item from the list
 
         # Create new folder to store DEM csv, png and TIF files
-        print('We need to create a folder to store the DEM data in, and set \n file names for the CSV and PNG files that will be created.')
+        print(
+            'We need to create a folder to store the DEM data in, and set \n file names for the CSV and PNG files that will be created.')
         f_name = input("Please enter a name for the folder and files (eg Counties):")
         f_name = str(f_name)
         os.makedirs(f_name, exist_ok=True)
@@ -72,7 +75,7 @@ def get_dem_data():
         downloaded_files = earthaccess.download(results, f_name)
 
         dem_files = [fn for fn in downloaded_files if 'dem.tif' in fn]  # use list
-        #print('dem_files=', dem_files)
+        # print('dem_files=', dem_files)
         # comprehension to select only filenames that match '*dem.tif'
         if len(dem_files) > 1:
             # save mosaicked tif
@@ -127,11 +130,11 @@ def onclick(event, elevation_data2, transform2):
                                                                                                end_point)
 
             # Convert decimal degree distances to metres from start point
-            gdf_pcs_copy, min_height, max_height = convert_distance_to_metres(point_lat_t, point_lon_t,
-                                                                              elevation_profile_t)
+            gdf_pcs_copy, min_height, max_height, max_dist = convert_distance_to_metres(point_lat_t, point_lon_t,
+                                                                                        elevation_profile_t)
 
             # Display elevation profile
-            display_elevation_profile(gdf_pcs_copy, start_point, end_point, min_height, max_height)
+            display_elevation_profile(gdf_pcs_copy, start_point, end_point, min_height, max_height, max_dist)
 
             # Create CSV with Height and Distance values for the elevation profile
             create_csv(gdf_pcs_copy)
@@ -195,13 +198,13 @@ def check_integer():
 '''Interpolate elevation data for x points between the 2 start and end points, number of points is a variable,
     more points mean a more accurate elevation profile'''
 
+
 def interpolate_elevation(elevation_data1, transform1, point1, point2):
     try:
         x1, y1 = point1  # start
         x2, y2 = point2  # end
 
         num_points = check_integer()
-        # print('num points=', num_points)
 
         # find distance between the 2 points and split into equal sections
         # to find equidistant height values along the cross-section line
@@ -229,7 +232,8 @@ def interpolate_elevation(elevation_data1, transform1, point1, point2):
     except Exception as e:
         print('An error occurred in the interpolate_elevation function.', e)
 
-#convert distance in decimal degrees to metres
+
+# convert distance in decimal degrees to metres
 def convert_distance_to_metres(point_lat1, point_lon1, elevation_profile2):
     try:
         df = pd.DataFrame({'Latitude': point_lat1, 'Longitude': point_lon1})
@@ -246,17 +250,13 @@ def convert_distance_to_metres(point_lat1, point_lon1, elevation_profile2):
         gdf_pcs_copy['h_distance'] = 0  # x axis
         gdf_pcs_copy['Elevation'] = 0  # y axis
 
-
         distance_array = []
-
         # Extracting the elevations from the DEM
         for index, row in gdf_pcs.iterrows():
             temp = gdf_pcs_copy.geometry.iloc[0].distance(gdf_pcs.geometry.iloc[index])
             distance_array.append(int(temp))
-            print('temp=', int(temp))
             gdf_pcs_copy.loc[index, 'h_distance'] = int(temp)
             gdf_pcs_copy.loc[index, 'Elevation'] = elevation_profile2[index]
-
 
         # use min and max elevation heights from the array for the y-axis
         min_height = min(elevation_profile2)
@@ -265,7 +265,7 @@ def convert_distance_to_metres(point_lat1, point_lon1, elevation_profile2):
         max_distance = max(distance_array)  # get the furthest distance
         print('max_distance=', max_distance)
 
-        return gdf_pcs_copy, min_height, max_height
+        return gdf_pcs_copy, min_height, max_height, max_distance
 
     except Exception as e:
         print('An error occurred in the convert_distance_to_metres function.', e)
@@ -282,23 +282,62 @@ def create_csv(gdf_pcs_copy1):
         print("An error occurred in the create_csv function.", e)
 
 
-def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_height):
+def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_height, max_dist):
+    global t_list
     try:
-        # display the elevation profile
-        plt.figure(figsize=(12, 4))
-        plt.plot(gdf_pcs_copy['h_distance'], gdf_pcs_copy['Elevation'], color='mediumvioletred')
-        plt.ylim(min_height - 20, max_height + 20)
-        plt.title('Elevation Profile \n' + str(round(point1[0], 6)) + ', ' + str(round(point1[1], 6)) +
-                  ' to ' + str(round(point2[0], 6)) + ', ' + str(round(point2[1], 6)), fontweight='bold')
-        plt.xlabel('Distance (m)', fontweight='bold')
-        plt.ylabel('Elevation (m)', fontweight='bold')
-        plt.grid(True)
+
+        number_of_plots = 0
+        if max_dist < 3000:
+            number_of_plots = 1
+        elif (max_dist >= 3000):
+            number_of_plots = math.floor(max_dist / 3000) + 1
+
+        #num_lists = number_of_plots
+
+        # Filter items less than 3000
+        n = 1
+        add_count = 3000  # split x-axis into subplots of 3000m
+        sub_list = []
+        for _ in range(number_of_plots):
+            # Select items based on criteria
+            if n == 1:
+                t_list = gdf_pcs_copy[(gdf_pcs_copy['h_distance'] < add_count)]
+                new_count = add_count
+            elif n > 1:
+                t_list = gdf_pcs_copy[(gdf_pcs_copy['h_distance'] > (new_count + 1)) &
+                                       (gdf_pcs_copy['h_distance'] < (new_count + add_count))]
+                new_count = new_count + add_count
+
+            n += 1
+            sub_list.append(gpd.GeoDataFrame(t_list))
+
+        fig, ax = plt.subplots(number_of_plots, 1, figsize=(12, 5 * number_of_plots))
+        fig.suptitle('Elevation Profile \n' + str(round(point1[0], 6)) + ', ' + str(round(point1[1], 6)) +
+                     ' to ' + str(round(point2[0], 6)) + ', ' + str(round(point2[1], 6)), fontweight='bold')
+
+        for counter in range(number_of_plots):
+            # add every single subplot to the figure with a for loop
+            ax[counter].plot(sub_list[counter]['h_distance'], sub_list[counter]['Elevation'],
+                             color='mediumvioletred')
+            '''if counter < number_of_plots:
+                ax[counter].axis('equal')
+            elif counter == number_of_plots:
+                ax[counter].set_aspect('equal', 'box')'''
+
+            ax[counter].set_ylim(min_height - 20, max_height + 20)
+            ax[counter].set_xlim()
+            ax[counter].set_xlabel('Distance (m)', fontweight='bold')
+            ax[counter].set_ylabel('Elevation (m)', fontweight='bold')
+            ax[counter].grid(True)
+
         plt.savefig(f_name + '\\' + f_name + 'plot.png')
-        print("PNG image file of the elevation profile created and stored in Data\\" + f_name + '\\' + f_name + 'plot.png')
+        print("PNG image file of the elevation profile created and stored in Data"
+              "\\" + f_name + '\\' + f_name + 'plot.png')
         plt.show()
 
     except Exception as e:
         print('An error occurred in the display_elevation_profile function.', e)
+
 
 # Enable GDAL exceptions handling
 gdal.UseExceptions()
@@ -313,5 +352,3 @@ click_count, start_point, end_point = 0, [0, 0], [0, 0]
 
 # Display GeoTiff
 display_tiff(transform, elevation_data)
-
-
