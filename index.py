@@ -121,8 +121,11 @@ def onclick(event, elevation_data2, transform2):
             # Draw line between two points on the DEM
             plt.plot([start_point[0], end_point[0]], [start_point[1], end_point[1]], color='red')
             plt.draw()
-            plt.savefig(f_name + '\\' + f_name + 'DEM.png')
-            print("PNG image file of the DEM created and stored in Data\\" + f_name + '\\' + f_name + 'DEM.png.')
+
+            # check if file exists, if create a new file with a number appended to the filename
+            path_dem = uniquify(f_name + '\\' + f_name + 'DEM.png')
+            plt.savefig(path_dem)
+            print("PNG image file of the DEM created and stored in Data\\" + path_dem)
 
             # Store elevation values into an array
             distances_t, elevation_profile_t, point_lat_t, point_lon_t = interpolate_elevation(elevation_data2,
@@ -276,10 +279,24 @@ def create_csv(gdf_pcs_copy1):
     try:
         # Extract h_distance (x) and Elevation (y) columns into a Pandas DataFrame
         x_y_data = gdf_pcs_copy1[['h_distance', 'Elevation']]
-        x_y_data.to_csv(r'' + f_name + '\\' + f_name + '.csv')
-        print('CSV file of elevation data for profile created Data\\' + f_name + '\\' + f_name + '.csv')
+
+        # check if file exists, if create a new file with a number appended to the filename
+        path_csv = uniquify(f_name + '\\' + f_name + '.csv')
+        x_y_data.to_csv(r'' + path_csv)
+        print('CSV file of elevation data for profile created Data\\' + path_csv)
     except Exception as e:
         print("An error occurred in the create_csv function.", e)
+
+def uniquify(path):
+    #https: // stackoverflow.com / questions / 13852700 / create - file - but - if -name - exists - add - number
+    filename, extension = os.path.splitext(path)
+    counter = 1
+
+    while os.path.exists(path):
+        path = filename + " (" + str(counter) + ")" + extension
+        counter += 1
+
+    return path
 
 
 def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_height, max_dist):
@@ -291,9 +308,10 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
         elif max_dist >= 3000:
             number_of_plots = math.floor(max_dist / 3000) + 1
 
-        fig, ax = plt.subplots(number_of_plots, 1, figsize=(12, 5 * number_of_plots))
+        fig, ax = plt.subplots(number_of_plots, 1, figsize=(12, 4 * number_of_plots))
         fig.suptitle('Elevation Profile \n' + str(round(point1[0], 6)) + ', ' + str(round(point1[1], 6)) +
-                     ' to ' + str(round(point2[0], 6)) + ', ' + str(round(point2[1], 6)), fontweight='bold')
+                     ' to ' + str(round(point2[0], 6)) + ', ' + str(round(point2[1], 6)) + ', ' + str(max_dist) + 'm \n',
+                     fontweight='bold')
 
         # Filter items less than 3000
         n = 1
@@ -321,9 +339,11 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
             fig.tight_layout()
             n += 1
 
-        plt.savefig(f_name + '\\' + f_name + 'plot.png')
-        print("PNG image file of the elevation profile created and stored in Data"
-              "\\" + f_name + '\\' + f_name + 'plot.png')
+        #check if file exists, if create a new file with a number appended to the filename
+        path_plot = uniquify(f_name + '\\' + f_name + 'plot.png')
+
+        plt.savefig(path_plot)
+        print("PNG image file of the elevation profile created and stored in Data\\" + path_plot)
         plt.show()
 
     except Exception as e:
