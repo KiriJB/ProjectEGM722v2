@@ -12,10 +12,8 @@ from matplotlib.widgets import Cursor
 import math
 import os
 
-'''upload a polygon shapefile to obtain boundary coordinates to search the earth access database with
-to download DEM data for the area within those bounds'''
-
-
+#upload a polygon shapefile to obtain boundary coordinates to search the earth access
+# database with to download DEM data for the area within those bounds
 def get_dem_data():
     try:
 
@@ -65,8 +63,8 @@ def get_dem_data():
         granule = next(iter(results))  # get the "first" item from the list
 
         # Create new folder to store DEM csv, png and TIF files
-        print(
-            'We need to create a folder to store the DEM data in, and set \n file names for the CSV and PNG files that will be created.')
+        print('We need to create a folder to store the DEM data in, and set \n file names'
+              ' for the CSV and PNG files that will be created.')
         f_name = input("Please enter a name for the folder and files (eg Counties):")
         f_name = str(f_name)
         os.makedirs(f_name, exist_ok=True)
@@ -102,7 +100,7 @@ def get_elevation_data(tif_file1):
     except Exception as e:
         print("An error occurred in the get_elevation_data function:", e)
 
-
+#click on 2 points on the map, to create a line for the elevation profile
 def onclick(event, elevation_data2, transform2):
     global click_count, start_point, end_point
 
@@ -125,6 +123,7 @@ def onclick(event, elevation_data2, transform2):
             # check if file exists, if create a new file with a number appended to the filename
             path_dem = uniquify(f_name + '\\' + f_name + 'DEM.png')
             plt.savefig(path_dem)
+
             print("PNG image file of the DEM created and stored in Data\\" + path_dem)
 
             # Store elevation values into an array
@@ -181,10 +180,9 @@ def display_tiff(transform1, elevation_data1):
         print('An error occurred in the display_tiff function.', e)
 
 
-def check_integer():
+def check_integer(str_question):
     while True:
-        num_points = input("Enter the number of points to use in elevation profile. \n"
-                           "The higher the number the more detailed the profile:")
+        num_points = input(str_question)
         try:
             val = int(num_points)
             if val < 0:  # if not a positive int print message and ask for input again
@@ -198,16 +196,19 @@ def check_integer():
     return val
 
 
-'''Interpolate elevation data for x points between the 2 start and end points, number of points is a variable,
-    more points mean a more accurate elevation profile'''
-
+#Interpolate elevation data for x points between the 2 start and end points, number of points is a variable,
+# more points mean a more accurate elevation profile
 
 def interpolate_elevation(elevation_data1, transform1, point1, point2):
     try:
         x1, y1 = point1  # start
         x2, y2 = point2  # end
 
-        num_points = check_integer()
+        #call the function that requests the number of points to get elevations for between
+        # the start and end points
+        str_question = ("Enter the number of points to use in elevation profile.\n The higher the number the more "
+                        "detailed the profile:")
+        num_points = check_integer(str_question)
 
         # find distance between the 2 points and split into equal sections
         # to find equidistant height values along the cross-section line
@@ -247,8 +248,8 @@ def convert_distance_to_metres(point_lat1, point_lon1, elevation_profile2):
         # scale on the x-axis
         gdf_pcs = gdf.to_crs(epsg=3857)
 
-        '''store distance for each point from the start point to end point into an array
-        store elevation data from each point into an array, to be used for x and y axis of elevation profile'''
+        # store distance for each point from the start point to end point into an array store
+        # elevation data from each point into an array, to be used for x and y-axis of elevation profile
         gdf_pcs_copy = gdf_pcs.copy()
         gdf_pcs_copy['h_distance'] = 0  # x axis
         gdf_pcs_copy['Elevation'] = 0  # y axis
@@ -266,7 +267,7 @@ def convert_distance_to_metres(point_lat1, point_lon1, elevation_profile2):
         max_height = max(elevation_profile2)
 
         max_distance = max(distance_array)  # get the furthest distance
-        print('max_distance=', max_distance)
+        print('Profile Distance=', max_distance)
 
         return gdf_pcs_copy, min_height, max_height, max_distance
 
@@ -283,7 +284,7 @@ def create_csv(gdf_pcs_copy1):
         # check if file exists, if create a new file with a number appended to the filename
         path_csv = uniquify(f_name + '\\' + f_name + '.csv')
         x_y_data.to_csv(r'' + path_csv)
-        print('CSV file of elevation data for profile created Data\\' + path_csv)
+        print('CSV file of elevation data for profile created \\' + path_csv)
     except Exception as e:
         print("An error occurred in the create_csv function.", e)
 
@@ -292,6 +293,7 @@ def uniquify(path):
     filename, extension = os.path.splitext(path)
     counter = 1
 
+    #sppend a number to the filename if file already exists
     while os.path.exists(path):
         path = filename + " (" + str(counter) + ")" + extension
         counter += 1
@@ -300,50 +302,72 @@ def uniquify(path):
 
 
 def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_height, max_dist):
+
     global t_list, new_count
+
     try:
-        number_of_plots = 0
-        if max_dist < 3000:
+        print('Selected cross section distance in metres ' + str(max_dist) + '(m)')
+        print('')
+        str_question = ("Split the elevation profile into subplots in metres ie 500,  "
+                        "enter 1 not to split the cross section:")
+
+        # divide the distance by n to calculate the number of plots
+        xsection_dist = check_integer(str_question)
+
+        if (max_dist < xsection_dist) or (xsection_dist == 1):
             number_of_plots = 1
-        elif max_dist >= 3000:
-            number_of_plots = math.floor(max_dist / 3000) + 1
+        elif max_dist >= xsection_dist:
+            number_of_plots = math.floor(max_dist / xsection_dist) + 1
 
-        fig, ax = plt.subplots(number_of_plots, 1, figsize=(12, 4 * number_of_plots))
+        fig, ax = plt.subplots(number_of_plots, ncols=1,
+                               figsize=(12, 4 * number_of_plots) if number_of_plots > 1 else (12, 4))
+        #sub plot title
+
         fig.suptitle('Elevation Profile \n' + str(round(point1[0], 6)) + ', ' + str(round(point1[1], 6)) +
-                     ' to ' + str(round(point2[0], 6)) + ', ' + str(round(point2[1], 6)) + ', ' + str(max_dist) + 'm \n',
-                     fontweight='bold')
+                         ' to ' + str(round(point2[0], 6)) + ', ' + str(round(point2[1], 6)) + ', ' + str(max_dist) + 'm \n',
+                         fontweight='bold')
 
-        # Filter items less than 3000
-        n = 1
-        add_count = 3000  # split x-axis into subplots of 3000m
-        sub_list = []
-        for _ in range(number_of_plots):
-            # Select items based on criteria
-            if n == 1:
-                t_list = gdf_pcs_copy[(gdf_pcs_copy['h_distance'] < add_count)]
+        # Filter items less than n
+        n = 0
+        #if 1 entered then set xsection_dist to the selected distance so 1 plot is shown
+        if xsection_dist == 1:
+            xsection_dist = max_dist
+
+        add_count = xsection_dist  # split x-axis into subplots of n(m)
+
+        #create individual subplot elevation profiles for each n(m) section
+        for ax_i in ax if isinstance(ax, np.ndarray) else [ax]:
+            print('n=', n)
+            if n == 0:
+                t_list = gdf_pcs_copy[gdf_pcs_copy['h_distance'] < add_count]
                 new_count = add_count
-            elif n > 1:
+            else:
                 t_list = gdf_pcs_copy[(gdf_pcs_copy['h_distance'] > (new_count + 1)) &
                                       (gdf_pcs_copy['h_distance'] < (new_count + add_count))]
                 new_count = new_count + add_count
 
-            sub_list.append(gpd.GeoDataFrame(t_list))
-
-            # add every single subplot to the figure with a for loop
-            ax[n-1].plot(sub_list[n-1]['h_distance'], sub_list[n-1]['Elevation'], color='mediumvioletred')
-            ax[n-1].set_ylim(min_height - 20, max_height + 20)
-            ax[n-1].set_xlim(new_count - add_count, new_count)
-            ax[n-1].set_xlabel('Distance (m)', fontweight='bold')
-            ax[n-1].set_ylabel('Elevation (m)', fontweight='bold')
-            ax[n-1].grid(True)
-            fig.tight_layout()
+            sub_list = gpd.GeoDataFrame(t_list)
+            ax_i.plot(sub_list['h_distance'], sub_list['Elevation'], color='mediumvioletred')
+            ax_i.set_ylim(min_height - 20, max_height + 20)
+            ax_i.set_xlim(new_count - add_count, new_count)
+            ax_i.set_xlabel('Distance (m)', fontweight='bold')
+            ax_i.set_ylabel('Elevation (m)', fontweight='bold')
+            ax_i.grid(True)
             n += 1
+
+        fig.tight_layout()
 
         #check if file exists, if create a new file with a number appended to the filename
         path_plot = uniquify(f_name + '\\' + f_name + 'plot.png')
-
         plt.savefig(path_plot)
-        print("PNG image file of the elevation profile created and stored in Data\\" + path_plot)
+
+        path_plt_pdf = uniquify(f_name + '\\' + f_name + 'plot.pdf')
+        plt.savefig(path_plt_pdf, bbox_inches='tight')
+
+        os.startfile(path_plt_pdf)
+
+        print("PNG image file of the elevation profile created and stored in " + path_plot)
+        print("PDF of the elevation profile created and stored in " + path_plt_pdf)
         plt.show()
 
     except Exception as e:
