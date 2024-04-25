@@ -12,11 +12,17 @@ from matplotlib.widgets import Cursor
 import math
 import os
 
-#upload a polygon shapefile to obtain boundary coordinates to search the earth access
-# database with to download DEM data for the area within those bounds
-def get_dem_data():
-    try:
 
+def get_dem_data():
+    """
+    Upload a polygon shapefile to obtain boundary coordinates to search the earth access
+    database with, to download DEM data for the area within those bounds.
+    Create folder to store files in
+
+    Returns:
+    string: The name input by the user for folder to store new files and name files
+    """
+    try:
         while True:
             boundary = input(
                 'Enter the name of the Shapefile you wish to use for this analysis, from the Data folder (ie counties.shp):')
@@ -88,8 +94,15 @@ def get_dem_data():
         print("An error occurred in the get_dem_data function:", e)
 
 
-# Read elevation data from a GeoTIFF file.
 def get_elevation_data(tif_file1):
+    """
+    Read elevation data from a GeoTIFF file.
+    Parameters:
+    tif_file1(string): location of the Geotiff file created from earthaccess data and stored locally
+
+    Returns:
+    string: The name input by the user for folder to store new files and name files
+    """
     try:
         dataset = gdal.Open(tif_file1)
 
@@ -100,8 +113,16 @@ def get_elevation_data(tif_file1):
     except Exception as e:
         print("An error occurred in the get_elevation_data function:", e)
 
-#click on 2 points on the map, to create a line for the elevation profile
+
 def onclick(event, elevation_data2, transform2):
+    """
+    Click on 2 points on the map, to create a line for the elevation profile
+
+    Parameters:
+    event: the onclick event
+    elevation_data2(list): Store elevation data in a list from geotiff
+    transform2(dataset): lat/lon data from tiff
+    """
     global click_count, start_point, end_point
 
     try:
@@ -143,13 +164,18 @@ def onclick(event, elevation_data2, transform2):
 
             print('THE END!')
 
-
     except Exception as e:
         print("An error occurred in the onclick function:", e)
 
 
-# Display the GeoTiff file
 def display_tiff(transform1, elevation_data1):
+    """
+    Display the geotiff file created from the EarthAccess data.
+
+    Parameters:
+    transform1(dataset): lat/lon data from geotiff
+    elevation_data1(list): Store elevation data in a list from geotiff
+    """
     try:
         # display the geotiff image
         plt.figure(figsize=(8, 6))
@@ -175,14 +201,22 @@ def display_tiff(transform1, elevation_data1):
 
         plt.show()
 
-
     except Exception as e:
         print('An error occurred in the display_tiff function.', e)
 
 
-def check_integer(str_question):
+def check_integer(str_input):
+    """
+    Check the input value is a + integer.
+
+    Parameters:
+    str_input(string): input string, asking for integer
+
+    Returns:
+    int: returns an integer
+    """
     while True:
-        num_points = input(str_question)
+        num_points = input(str_input)
         try:
             val = int(num_points)
             if val < 0:  # if not a positive int print message and ask for input again
@@ -196,10 +230,24 @@ def check_integer(str_question):
     return val
 
 
-#Interpolate elevation data for x points between the 2 start and end points, number of points is a variable,
-# more points mean a more accurate elevation profile
-
 def interpolate_elevation(elevation_data1, transform1, point1, point2):
+    """
+    Interpolate elevation data for x points between the 2 start and end points, number of points is a variable,
+    more points mean a more accurate elevation profile.
+
+    Parameters:
+    elevation_data1(list of integers): Store elevation data in a list from geotiff
+    transform1(dataset): lat/lon data from geotiff
+    point1(list of floats): Start point of line to use for the elevation profile(lat/lon)
+    point2(list of floats): End point of line to use for the elevation profile(lat/lon)
+
+    Returns:
+    distances, elevation_profile, point_lat, point_lon
+    list : list of distances stored as latitude / longitudes
+    elevation_profile : list of heights along the elevation profile line
+    list : latitude for each point along the elevation profile line
+    list : longitude for each point along the elevation profile line
+    """
     try:
         x1, y1 = point1  # start
         x2, y2 = point2  # end
@@ -208,6 +256,7 @@ def interpolate_elevation(elevation_data1, transform1, point1, point2):
         # the start and end points
         str_question = ("Enter the number of points to use in elevation profile.\n The higher the number the more "
                         "detailed the profile:")
+        #validate that an integer has been entered
         num_points = check_integer(str_question)
 
         # find distance between the 2 points and split into equal sections
@@ -237,8 +286,22 @@ def interpolate_elevation(elevation_data1, transform1, point1, point2):
         print('An error occurred in the interpolate_elevation function.', e)
 
 
-# convert distance in decimal degrees to metres
 def convert_distance_to_metres(point_lat1, point_lon1, elevation_profile2):
+    """
+    Convert distance to each point from the start point from decimal degrees to metres
+
+    Parameters:
+    point_lat1(list of integers): Start point of elevation profile line
+    point_lon1(list of integers): End point of elevation profile line
+    elevation_profile2(list of integers): Store elevation data in a list from geotiff
+
+    Returns:
+    gdf_pcs_copy, min_height, max_height, max_distance
+    dataframe : containing distance of each point in metres from the start point and elevation values for each point
+    int : minimum height value in the geodataset for the y-axis
+    int : maximum height value in the geodataset for the y-axis
+    int : distance in metres from the start to end points for the elevation profile in metres
+    """
     try:
         df = pd.DataFrame({'Latitude': point_lat1, 'Longitude': point_lon1})
         gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.Longitude, df.Latitude))
@@ -275,8 +338,14 @@ def convert_distance_to_metres(point_lat1, point_lon1, elevation_profile2):
         print('An error occurred in the convert_distance_to_metres function.', e)
 
 
-# function to create a csv file containing distance from start point and height
 def create_csv(gdf_pcs_copy1):
+    """
+    Function to create a csv file containing distance and height of each point from start of elevation profile
+
+    Parameters:
+    gdf_pcs_copy1(dataframe): containing distance of each point in metres from the start
+    point and elevation values for each point.
+    """
     try:
         # Extract h_distance (x) and Elevation (y) columns into a Pandas DataFrame
         x_y_data = gdf_pcs_copy1[['h_distance', 'Elevation']]
@@ -288,12 +357,22 @@ def create_csv(gdf_pcs_copy1):
     except Exception as e:
         print("An error occurred in the create_csv function.", e)
 
+
 def uniquify(path):
-    #https: // stackoverflow.com / questions / 13852700 / create - file - but - if -name - exists - add - number
+    """
+    Function to create a new file if one already exists with the specified name with a number that increments
+    https: // stackoverflow.com / questions / 13852700 / create - file - but - if -name - exists - add - number
+
+    Parameters:
+    path(string): path of file, to check if it exists
+
+    Returns:
+    string : path of the new file and its filename
+    """
     filename, extension = os.path.splitext(path)
     counter = 1
 
-    #sppend a number to the filename if file already exists
+    #append a number to the filename if file already exists
     while os.path.exists(path):
         path = filename + " (" + str(counter) + ")" + extension
         counter += 1
@@ -302,14 +381,25 @@ def uniquify(path):
 
 
 def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_height, max_dist):
+    """
+    Display the elevation profile. Use inputs how many metres to split the profile in to.
 
+    Parameters:
+    gdf_pcs_copy(dataframe) : containing distance of each point in metres from the start
+    point1(list of floats) : lat/lon of start point
+    point2(list of floats) : lat/lon of end point
+    min_height(int) : minimum height value in the geodataset for the y-axis
+    max_height(int) : maximum height value in the geodataset for the y-axis
+    max_dist(int) : distance of the elevation profile
+
+    """
     global t_list, new_count
 
     try:
-        print('Selected cross section distance in metres ' + str(max_dist) + '(m)')
+        print('Selected elevation profile distance in metres ' + str(max_dist) + '(m)')
         print('')
         str_question = ("Split the elevation profile into subplots in metres ie 500,  "
-                        "enter 1 not to split the cross section:")
+                        "enter 1 to not split the profile over numerous subplots:")
 
         # divide the distance by n to calculate the number of plots
         xsection_dist = check_integer(str_question)
@@ -322,7 +412,6 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
         fig, ax = plt.subplots(number_of_plots, ncols=1,
                                figsize=(12, 4 * number_of_plots) if number_of_plots > 1 else (12, 4))
         #sub plot title
-
         fig.suptitle('Elevation Profile \n' + str(round(point1[0], 6)) + ', ' + str(round(point1[1], 6)) +
                          ' to ' + str(round(point2[0], 6)) + ', ' + str(round(point2[1], 6)) + ', ' + str(max_dist) + 'm \n',
                          fontweight='bold')
@@ -337,7 +426,6 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
 
         #create individual subplot elevation profiles for each n(m) section
         for ax_i in ax if isinstance(ax, np.ndarray) else [ax]:
-            print('n=', n)
             if n == 0:
                 t_list = gdf_pcs_copy[gdf_pcs_copy['h_distance'] < add_count]
                 new_count = add_count
