@@ -15,8 +15,8 @@ import os
 
 def get_dem_data():
     """
-    Upload a polygon shapefile to obtain boundary coordinates to search the earth access
-    database with, to download DEM data for the area within those bounds.
+    Upload a polygon shapefile to obtain boundary coordinates these are used by the earth access
+    database to find DEM data within those bounds, this data is downloaded mosaicked and saved locally as a tiff
     Create folder to store files in
 
     Returns:
@@ -25,12 +25,13 @@ def get_dem_data():
     try:
         while True:
             boundary = input(
-                'Enter the name of the Shapefile you wish to use for this analysis, from the Data folder (ie counties.shp):')
+                'Enter the name of the Shapefile from the Data folder that you wish to use \n'
+                'for this analysis ie.purbeck_boundary.shp:')
+            print('')
             # Example shape files you could use that are stored in the data folder
-            # Liechtenstein_Country_Boundary.shp (liechtenstein)
+            # Liechtenstein_Country_Boundary.shp (liechtenstein), purbeck_boundary.shp
             # Andorra_Country_Boundary.shp (Andorra), Counties.shp (Northern Ireland)
             # Djibouti_Country_Boundary.shp (Djibouti), Maine_State_Boundary_Polygon_Feature.shp(Maine, USA)
-
             boundary_path = 'Data\\' + str(boundary)
 
             if os.path.exists(boundary_path):
@@ -49,8 +50,8 @@ def get_dem_data():
         search_area = shp.geometry.polygon.orient(search_area, sign=1)  # a sign of 1 means oriented counter-clockwise
 
         earthaccess.login(strategy='netrc')
-        # search for datasets that match the keyword 'elevation'
-        # search for datasets that intersect the selected shapefile polygon area
+        # search for datasets that match the keyword 'elevation' and
+        # that intersect the selected shapefile polygon area
         datasets = earthaccess.search_datasets(keyword='aster elevation',
                                                polygon=search_area.exterior.coords)
 
@@ -65,13 +66,15 @@ def get_dem_data():
         # only show the first 10 results
         results = earthaccess.search_data(short_name=ds_name,
                                           polygon=search_area.exterior.coords)
-        # polygon=search_area.exterior.coords, count=30)
+
         granule = next(iter(results))  # get the "first" item from the list
 
         # Create new folder to store DEM csv, png and TIF files
-        print('We need to create a folder to store the DEM data in, and set \n file names'
-              ' for the CSV and PNG files that will be created.')
-        f_name = input("Please enter a name for the folder and files (eg Counties):")
+        print('\nWe need to create a folder to store the DEM data in, and set file names\n'
+              'for the CSV and PNG files that will be created.')
+        f_name = input("Please enter a name for the folder and files (eg purbeck):")
+        print('')
+
         f_name = str(f_name)
         os.makedirs(f_name, exist_ok=True)
 
@@ -79,7 +82,7 @@ def get_dem_data():
         downloaded_files = earthaccess.download(results, f_name)
 
         dem_files = [fn for fn in downloaded_files if 'dem.tif' in fn]  # use list
-        # print('dem_files=', dem_files)
+
         # comprehension to select only filenames that match '*dem.tif'
         if len(dem_files) > 1:
             # save mosaicked tif
@@ -87,7 +90,7 @@ def get_dem_data():
         else:
             if not Path(f_name + '//ASTDTM_Mosaic.tif').is_file():
                 os.rename(str(dem_files[0]), f_name + '//ASTDTM_Mosaic.tif')
-        print('ASTDTM_Mosaic.tif created.')
+        print('ASTDTM_Mosaic.tif created and saved to ' + f_name + '//ASTDTM_Mosaic.tif\n')
         return f_name
 
     except Exception as e:
@@ -105,7 +108,6 @@ def get_elevation_data(tif_file1):
     """
     try:
         dataset = gdal.Open(tif_file1)
-
         band = dataset.GetRasterBand(1)  # assuming one band
         elevation_data_temp = band.ReadAsArray()  # read band data into an array
         transform_temp = dataset.GetGeoTransform()  # convert from row/column data to co-ords.
@@ -120,14 +122,14 @@ def onclick(event, elevation_data2, transform2):
 
     Parameters:
     event: the onclick event
-    elevation_data2(list): Store elevation data in a list from geotiff
+    elevation_data2(list): Elevation data stored in a list derived from the geotiff
     transform2(dataset): lat/lon data from tiff
     """
     global click_count, start_point, end_point
 
     try:
         end_point = 0
-
+        # store click locations to produce the elevation profiles
         if click_count == 0:
             start_point = (event.xdata, event.ydata)
             click_count += 1
@@ -136,13 +138,14 @@ def onclick(event, elevation_data2, transform2):
             end_point = (event.xdata, event.ydata)
             click_count += 1
             print("Second point clicked:", end_point)
+            print('')
 
-            # Draw line between two points on the DEM
+            # Draw a line between two points on the DEM
             plt.plot([start_point[0], end_point[0]], [start_point[1], end_point[1]], color='red')
             plt.draw()
 
-            # check if file exists, if create a new file with a number appended to the filename
-            path_dem = uniquify(f_name + '\\' + f_name + 'DEM.png')
+            # check if file exists, if not create a new file with a number appended to the filename
+            path_dem = uniquify(f_name + '\\' + f_name + '_DEM.png')
             plt.savefig(path_dem)
 
             print("PNG image file of the DEM created and stored in Data\\" + path_dem)
@@ -162,7 +165,7 @@ def onclick(event, elevation_data2, transform2):
             # Create CSV with Height and Distance values for the elevation profile
             create_csv(gdf_pcs_copy)
 
-            print('THE END!')
+            print('\nTHE END!')
 
     except Exception as e:
         print("An error occurred in the onclick function:", e)
@@ -196,8 +199,7 @@ def display_tiff(transform1, elevation_data1):
                                            lambda event: onclick(event, elevation_data1, transform1))
 
         cursor = Cursor(plt.gca(), useblit=True, color='red', linewidth=1)
-
-        print("Click 2 points on the map to draw a line for the elevation profile.")
+        print("Click 2 points on the map to draw a line for the elevation profile:")
 
         plt.show()
 
@@ -225,15 +227,15 @@ def check_integer(str_input):
             break
 
         except ValueError:
-            print("That's not an int!")
+            print("That's not an int!")  # if letters are entered then show this message
 
     return val
 
 
 def interpolate_elevation(elevation_data1, transform1, point1, point2):
     """
-    Interpolate elevation data for x points between the 2 start and end points, number of points is a variable,
-    more points mean a more accurate elevation profile.
+    Interpolate elevation data for x points between the start and end points, number of points is a variable,
+    a higher value will mean a more accurate elevation profile.
 
     Parameters:
     elevation_data1(list of integers): Store elevation data in a list from geotiff
@@ -243,20 +245,23 @@ def interpolate_elevation(elevation_data1, transform1, point1, point2):
 
     Returns:
     distances, elevation_profile, point_lat, point_lon
-    list : list of distances stored as latitude / longitudes
+    list: list of distances stored as latitude / longitudes
     elevation_profile : list of heights along the elevation profile line
-    list : latitude for each point along the elevation profile line
-    list : longitude for each point along the elevation profile line
+    list: latitude for each point along the elevation profile line
+    list: longitude for each point along the elevation profile line
     """
     try:
         x1, y1 = point1  # start
         x2, y2 = point2  # end
 
-        #call the function that requests the number of points to get elevations for between
-        # the start and end points
-        str_question = ("Enter the number of points to use in elevation profile.\n The higher the number the more "
-                        "detailed the profile:")
-        #validate that an integer has been entered
+        # request the number of points to get elevation data for between
+        # the selected start and end points
+        print('The number of points entered here will be used to calculate equidistant points along'
+              ' the elevation profile\n'
+              'elevation data at each point will be extracted from the DEM.')
+        str_question = "Enter the number of points to use to calculate the elevation profile. ie 500:"
+
+        # validate that an integer has been entered
         num_points = check_integer(str_question)
 
         # find distance between the 2 points and split into equal sections
@@ -266,8 +271,9 @@ def interpolate_elevation(elevation_data1, transform1, point1, point2):
         elevation_profile = []  # array to store elevation values for profile
         point_lon = []
         point_lat = []
+
         for dist in distances:
-            # Calculates the x and y coordinate of the point along the line at the current distance dist.
+            # Calculates the x and y coordinate of the point along the line at the current dist.
             x = x1 + dist * (x2 - x1) / np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
             y = y1 + dist * (y2 - y1) / np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
             point_lon.append(x)
@@ -300,7 +306,7 @@ def convert_distance_to_metres(point_lat1, point_lon1, elevation_profile2):
     dataframe : containing distance of each point in metres from the start point and elevation values for each point
     int : minimum height value in the geodataset for the y-axis
     int : maximum height value in the geodataset for the y-axis
-    int : distance in metres from the start to end points for the elevation profile in metres
+    int : distance in metres from the start to end points for the elevation profile
     """
     try:
         df = pd.DataFrame({'Latitude': point_lat1, 'Longitude': point_lon1})
@@ -330,7 +336,8 @@ def convert_distance_to_metres(point_lat1, point_lon1, elevation_profile2):
         max_height = max(elevation_profile2)
 
         max_distance = max(distance_array)  # get the furthest distance
-        print('Profile Distance=', max_distance)
+        print('')
+        # print('Profile Distance=', max_distance)
 
         return gdf_pcs_copy, min_height, max_height, max_distance
 
@@ -351,9 +358,9 @@ def create_csv(gdf_pcs_copy1):
         x_y_data = gdf_pcs_copy1[['h_distance', 'Elevation']]
 
         # check if file exists, if create a new file with a number appended to the filename
-        path_csv = uniquify(f_name + '\\' + f_name + '.csv')
+        path_csv = uniquify(f_name + '\\' + f_name + '_data.csv')
         x_y_data.to_csv(r'' + path_csv)
-        print('CSV file of elevation data for profile created \\' + path_csv)
+        print('CSV file of elevation data for profile created and stored in \\' + path_csv)
     except Exception as e:
         print("An error occurred in the create_csv function.", e)
 
@@ -361,7 +368,7 @@ def create_csv(gdf_pcs_copy1):
 def uniquify(path):
     """
     Function to create a new file if one already exists with the specified name with a number that increments
-    https: // stackoverflow.com / questions / 13852700 / create - file - but - if -name - exists - add - number
+    source - https: // stackoverflow.com / questions / 13852700 / create - file - but - if -name - exists - add - number
 
     Parameters:
     path(string): path of file, to check if it exists
@@ -372,7 +379,7 @@ def uniquify(path):
     filename, extension = os.path.splitext(path)
     counter = 1
 
-    #append a number to the filename if file already exists
+    # append a number to the filename if file already exists
     while os.path.exists(path):
         path = filename + " (" + str(counter) + ")" + extension
         counter += 1
@@ -382,7 +389,7 @@ def uniquify(path):
 
 def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_height, max_dist):
     """
-    Display the elevation profile. Use inputs how many metres to split the profile in to.
+    Display the elevation profile. User inputs how many metres to split the elevation profile into.
 
     Parameters:
     gdf_pcs_copy(dataframe) : containing distance of each point in metres from the start
@@ -391,19 +398,20 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
     min_height(int) : minimum height value in the geodataset for the y-axis
     max_height(int) : maximum height value in the geodataset for the y-axis
     max_dist(int) : distance of the elevation profile
-
     """
     global t_list, new_count
 
     try:
         print('Selected elevation profile distance in metres ' + str(max_dist) + '(m)')
         print('')
-        str_question = ("Split the elevation profile into subplots in metres ie 500,  "
+        str_question = ("Split the elevation profile into subplots in metres \nie if the profile distance is "
+                        "9,600m you could enter 2500 to split the profile into 4 x 2,500m subplots,\n"
                         "enter 1 to not split the profile over numerous subplots:")
 
         # divide the distance by n to calculate the number of plots
         xsection_dist = check_integer(str_question)
 
+        # if value entered is > than max distance or value entered = 1 then display 1 subplot
         if (max_dist < xsection_dist) or (xsection_dist == 1):
             number_of_plots = 1
         elif max_dist >= xsection_dist:
@@ -411,20 +419,19 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
 
         fig, ax = plt.subplots(number_of_plots, ncols=1,
                                figsize=(12, 4 * number_of_plots) if number_of_plots > 1 else (12, 4))
-        #sub plot title
+        # sub plot title
         fig.suptitle('Elevation Profile \n' + str(round(point1[0], 6)) + ', ' + str(round(point1[1], 6)) +
-                         ' to ' + str(round(point2[0], 6)) + ', ' + str(round(point2[1], 6)) + ', ' + str(max_dist) + 'm \n',
-                         fontweight='bold')
+                     ' to ' + str(round(point2[0], 6)) + ', ' + str(round(point2[1], 6)) + ', ' +
+                     str(max_dist) + 'm \n', fontweight='bold')
 
-        # Filter items less than n
         n = 0
-        #if 1 entered then set xsection_dist to the selected distance so 1 plot is shown
+        # if 1 entered then set xsection_dist to entire profile length
         if xsection_dist == 1:
             xsection_dist = max_dist
 
         add_count = xsection_dist  # split x-axis into subplots of n(m)
 
-        #create individual subplot elevation profiles for each n(m) section
+        # create individual subplot elevation profiles for each n(m) section
         for ax_i in ax if isinstance(ax, np.ndarray) else [ax]:
             if n == 0:
                 t_list = gdf_pcs_copy[gdf_pcs_copy['h_distance'] < add_count]
@@ -445,16 +452,17 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
 
         fig.tight_layout()
 
-        #check if file exists, if create a new file with a number appended to the filename
-        path_plot = uniquify(f_name + '\\' + f_name + 'plot.png')
+        # check if file exists, if not create a new file with a number appended to the filename
+        path_plot = uniquify(f_name + '\\' + f_name + '_profile.png')
         plt.savefig(path_plot)
 
-        path_plt_pdf = uniquify(f_name + '\\' + f_name + 'plot.pdf')
+        # check if file exists, if not create a new file with a number appended to the filename
+        path_plt_pdf = uniquify(f_name + '\\' + f_name + '_profile.pdf')
         plt.savefig(path_plt_pdf, bbox_inches='tight')
 
-        os.startfile(path_plt_pdf)
+        os.startfile(path_plt_pdf)  # open the pdf file
 
-        print("PNG image file of the elevation profile created and stored in " + path_plot)
+        print("\nPNG image file of the elevation profile created and stored in " + path_plot)
         print("PDF of the elevation profile created and stored in " + path_plt_pdf)
         plt.show()
 
@@ -465,12 +473,14 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
 # Enable GDAL exceptions handling
 gdal.UseExceptions()
 
+# call function to get the DEM data from NASA Earthaccess
 f_name = get_dem_data()
 
 # Open geotiff and read contents into 2d array
 tif_file = f_name + '\\ASTDTM_Mosaic.tif'
 elevation_data, transform = get_elevation_data(tif_file)
 
+# declare variables
 click_count, start_point, end_point = 0, [0, 0], [0, 0]
 
 # Display GeoTiff
