@@ -142,12 +142,14 @@ def onclick(event, elevation_data2, transform2):
 
             # Draw a line between two points on the DEM
             plt.plot([start_point[0], end_point[0]], [start_point[1], end_point[1]], color='red')
-            plt.draw()
+            plt.show(block=True)
 
             # check if file exists, if not create a new file with a number appended to the filename
             path_dem = uniquify(f_name + '\\' + f_name + '_DEM.png')
             plt.savefig(path_dem)
+            #os.startfile(path_dem)  # open the png file
 
+            #plt.close('all')
             print("PNG image file of the DEM created and stored in Data\\" + path_dem)
 
             # Store elevation values into an array
@@ -159,6 +161,7 @@ def onclick(event, elevation_data2, transform2):
             gdf_pcs_copy, min_height, max_height, max_dist = convert_distance_to_metres(point_lat_t, point_lon_t,
                                                                                         elevation_profile_t)
 
+            print('here4')
             # Display elevation profile
             display_elevation_profile(gdf_pcs_copy, start_point, end_point, min_height, max_height, max_dist)
 
@@ -166,6 +169,14 @@ def onclick(event, elevation_data2, transform2):
             create_csv(gdf_pcs_copy)
 
             print('\nTHE END!')
+
+
+    except RuntimeError as e:
+
+        if "event loop is already running" in str(e):
+            print("Event loop is already running.")
+        else:
+            print("An error occurred in the onclick function:", e)
 
     except Exception as e:
         print("An error occurred in the onclick function:", e)
@@ -180,6 +191,7 @@ def display_tiff(transform1, elevation_data1):
     elevation_data1(list): Store elevation data in a list from geotiff
     """
     try:
+
         # display the geotiff image
         plt.figure(figsize=(8, 6))
         minx = transform1[0]
@@ -191,17 +203,18 @@ def display_tiff(transform1, elevation_data1):
         plt.imshow(elevation_data1, extent=(minx, maxx, miny, maxy), cmap='terrain', aspect='auto')
 
         # display the GeoTiff with a color bar
-        plt.title('Geotiff Visualization', fontweight='bold')
-        plt.xlabel('Longitude', fontweight='bold')
-        plt.ylabel('Latitude', fontweight='bold')
+        plt.title(label='Geotiff Visualization', fontweight='bold')
+        plt.xlabel(xlabel='Longitude', fontweight='bold')
+        plt.ylabel(ylabel='Latitude', fontweight='bold')
         plt.colorbar(label='Elevation (m)', shrink=0.7)
         cid = plt.gcf().canvas.mpl_connect('button_press_event',
                                            lambda event: onclick(event, elevation_data1, transform1))
 
+
         cursor = Cursor(plt.gca(), useblit=True, color='red', linewidth=1)
         print("Click 2 points on the map to draw a line for the elevation profile:")
 
-        plt.show()
+        plt.show(block=True)
 
     except Exception as e:
         print('An error occurred in the display_tiff function.', e)
@@ -209,7 +222,7 @@ def display_tiff(transform1, elevation_data1):
 
 def check_integer(str_input):
     """
-    Check the input value is a + integer.
+    Check the input value is a +ive integer.
 
     Parameters:
     str_input(string): input string, asking for integer
@@ -217,19 +230,24 @@ def check_integer(str_input):
     Returns:
     int: returns an integer
     """
-    while True:
-        num_points = input(str_input)
-        try:
-            val = int(num_points)
-            if val < 0:  # if not a positive int print message and ask for input again
-                print("Sorry, input must be a positive integer, try again")
-                continue
-            break
+    try:
+        while True:
+            num_points1 = input(str_input)
+            try:
+                val = int(num_points1)
+                if val < 0:  # if not a positive int print message and ask for input again
+                    print("Sorry, input must be a positive integer, try again")
+                    continue
+                break
+    
+            except ValueError:
+                print("That's not an int!")  # if letters are entered then show this message
+    
+        return val
+    except EOFError:
+        print("Input stream ended unexpectedly. Please try again.")
+        return None  # or take appropriate action
 
-        except ValueError:
-            print("That's not an int!")  # if letters are entered then show this message
-
-    return val
 
 
 def interpolate_elevation(elevation_data1, transform1, point1, point2):
@@ -259,10 +277,15 @@ def interpolate_elevation(elevation_data1, transform1, point1, point2):
         print('The number of points entered here will be used to calculate equidistant points along'
               ' the elevation profile\n'
               'elevation data at each point will be extracted from the DEM.')
-        str_question = "Enter the number of points to use to calculate the elevation profile. ie 500:"
 
+        str_question = "Enter the number of points to use to calculate the elevation profile. ie 500:"
+        #print('here interpolate1')
+        #exit()
         # validate that an integer has been entered
         num_points = check_integer(str_question)
+        # num_points = 500
+        #print('here interpolate2')
+        #exit()
 
         # find distance between the 2 points and split into equal sections
         # to find equidistant height values along the cross-section line
@@ -288,8 +311,15 @@ def interpolate_elevation(elevation_data1, transform1, point1, point2):
             elevation_profile.append(elevation_data1[row, col])  # append height value from pixel
 
         return distances, elevation_profile, point_lat, point_lon
+    except RuntimeError as e:
+
+        if "event loop is already running" in str(e):
+            print("Event loop is already running.")
+        else:
+            print("An error occurred in the interpolate_elevation function:", e)
+
     except Exception as e:
-        print('An error occurred in the interpolate_elevation function.', e)
+        print("An error occurred in the interpolate_elevation function:", e)
 
 
 def convert_distance_to_metres(point_lat1, point_lon1, elevation_profile2):
@@ -469,6 +499,8 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
     except Exception as e:
         print('An error occurred in the display_elevation_profile function.', e)
 
+
+global cursor
 
 # Enable GDAL exceptions handling
 gdal.UseExceptions()
