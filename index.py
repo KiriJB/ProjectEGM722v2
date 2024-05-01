@@ -1,3 +1,4 @@
+from tkinter import *
 import pandas as pd
 from osgeo import gdal
 import geopandas as gpd
@@ -116,72 +117,6 @@ def get_elevation_data(tif_file1):
         print("An error occurred in the get_elevation_data function:", e)
 
 
-def onclick(event, elevation_data2, transform2):
-    """
-    Click on 2 points on the map, to create a line for the elevation profile
-
-    Parameters:
-    event: the onclick event
-    elevation_data2(list): Elevation data stored in a list derived from the geotiff
-    transform2(dataset): lat/lon data from tiff
-    """
-    global click_count, start_point, end_point
-
-    try:
-        end_point = 0
-        # store click locations to produce the elevation profiles
-        if click_count == 0:
-            start_point = (event.xdata, event.ydata)
-            click_count += 1
-            print("First point clicked:", start_point)
-        elif click_count == 1:
-            end_point = (event.xdata, event.ydata)
-            click_count += 1
-            print("Second point clicked:", end_point)
-            print('')
-
-            # Draw a line between two points on the DEM
-            plt.plot([start_point[0], end_point[0]], [start_point[1], end_point[1]], color='red')
-            plt.show(block=True)
-
-            # check if file exists, if not create a new file with a number appended to the filename
-            path_dem = uniquify(f_name + '\\' + f_name + '_DEM.png')
-            plt.savefig(path_dem)
-            #os.startfile(path_dem)  # open the png file
-
-            #plt.close('all')
-            print("PNG image file of the DEM created and stored in Data\\" + path_dem)
-
-            # Store elevation values into an array
-            distances_t, elevation_profile_t, point_lat_t, point_lon_t = interpolate_elevation(elevation_data2,
-                                                                                               transform2, start_point,
-                                                                                               end_point)
-
-            # Convert decimal degree distances to metres from start point
-            gdf_pcs_copy, min_height, max_height, max_dist = convert_distance_to_metres(point_lat_t, point_lon_t,
-                                                                                        elevation_profile_t)
-
-            print('here4')
-            # Display elevation profile
-            display_elevation_profile(gdf_pcs_copy, start_point, end_point, min_height, max_height, max_dist)
-
-            # Create CSV with Height and Distance values for the elevation profile
-            create_csv(gdf_pcs_copy)
-
-            print('\nTHE END!')
-
-
-    except RuntimeError as e:
-
-        if "event loop is already running" in str(e):
-            print("Event loop is already running.")
-        else:
-            print("An error occurred in the onclick function:", e)
-
-    except Exception as e:
-        print("An error occurred in the onclick function:", e)
-
-
 def display_tiff(transform1, elevation_data1):
     """
     Display the geotiff file created from the EarthAccess data.
@@ -207,14 +142,48 @@ def display_tiff(transform1, elevation_data1):
         plt.xlabel(xlabel='Longitude', fontweight='bold')
         plt.ylabel(ylabel='Latitude', fontweight='bold')
         plt.colorbar(label='Elevation (m)', shrink=0.7)
-        cid = plt.gcf().canvas.mpl_connect('button_press_event',
-                                           lambda event: onclick(event, elevation_data1, transform1))
-
-
         cursor = Cursor(plt.gca(), useblit=True, color='red', linewidth=1)
+
         print("Click 2 points on the map to draw a line for the elevation profile:")
 
-        plt.show(block=True)
+        # Get user clicks using ginput
+        click_coords = plt.ginput(2)
+
+        # Convert pixel coordinates to geographic coordinates
+        for i, (lat, lon) in enumerate(click_coords, start=1):
+
+            if i == 1:
+                start_point = [lat, lon]
+                print("Start point:", start_point)
+            elif i == 2:
+                end_point = [lat, lon]
+                print("End point:", end_point)
+
+        # Draw a line between two points on the DEM
+        plt.plot([start_point[0], end_point[0]], [start_point[1], end_point[1]], color='red')
+        plt.draw()
+
+        # check if file exists, if not create a new file with a number appended to the filename
+        path_dem = uniquify(f_name + '\\' + f_name + '_DEM.png')
+        plt.savefig(path_dem)
+
+        print("PNG image file of the DEM created and stored in Data\\" + path_dem)
+        # Store elevation values into an array
+        distances_t, elevation_profile_t, point_lat_t, point_lon_t = interpolate_elevation(elevation_data1,
+                                                                                           transform1, start_point,
+                                                                                           end_point)
+
+        # Convert decimal degree distances to metres from start point
+        gdf_pcs_copy, min_height, max_height, max_dist = convert_distance_to_metres(point_lat_t, point_lon_t,
+                                                                                    elevation_profile_t)
+
+        # Create CSV with Height and Distance values for the elevation profile
+        create_csv(gdf_pcs_copy)
+
+        # Display elevation profile
+        display_elevation_profile(gdf_pcs_copy, start_point, end_point, min_height, max_height, max_dist)
+
+        print('\nTHE END!')
 
     except Exception as e:
         print('An error occurred in the display_tiff function.', e)
@@ -239,15 +208,14 @@ def check_integer(str_input):
                     print("Sorry, input must be a positive integer, try again")
                     continue
                 break
-    
+
             except ValueError:
                 print("That's not an int!")  # if letters are entered then show this message
-    
+
         return val
     except EOFError:
         print("Input stream ended unexpectedly. Please try again.")
         return None  # or take appropriate action
-
 
 
 def interpolate_elevation(elevation_data1, transform1, point1, point2):
@@ -279,13 +247,9 @@ def interpolate_elevation(elevation_data1, transform1, point1, point2):
               'elevation data at each point will be extracted from the DEM.')
 
         str_question = "Enter the number of points to use to calculate the elevation profile. ie 500:"
-        #print('here interpolate1')
-        #exit()
+
         # validate that an integer has been entered
         num_points = check_integer(str_question)
-        # num_points = 500
-        #print('here interpolate2')
-        #exit()
 
         # find distance between the 2 points and split into equal sections
         # to find equidistant height values along the cross-section line
@@ -311,12 +275,6 @@ def interpolate_elevation(elevation_data1, transform1, point1, point2):
             elevation_profile.append(elevation_data1[row, col])  # append height value from pixel
 
         return distances, elevation_profile, point_lat, point_lon
-    except RuntimeError as e:
-
-        if "event loop is already running" in str(e):
-            print("Event loop is already running.")
-        else:
-            print("An error occurred in the interpolate_elevation function:", e)
 
     except Exception as e:
         print("An error occurred in the interpolate_elevation function:", e)
@@ -500,7 +458,7 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
         print('An error occurred in the display_elevation_profile function.', e)
 
 
-global cursor
+global cursor, cid
 
 # Enable GDAL exceptions handling
 gdal.UseExceptions()
@@ -515,5 +473,13 @@ elevation_data, transform = get_elevation_data(tif_file)
 # declare variables
 click_count, start_point, end_point = 0, [0, 0], [0, 0]
 
-# Display GeoTiff
-display_tiff(transform, elevation_data)
+# Display GeoTiff using Tkinter to start a separate event loop
+root = Tk()
+root.geometry("300x100")
+
+my_button = Button(root, text="Click to View Geotiff", command=lambda: display_tiff(transform, elevation_data))
+my_button.pack()
+
+#Make the window jump above all
+root.attributes('-topmost', True)
+root.mainloop()
