@@ -1,4 +1,5 @@
 name: ProjectEGM722v2
+author: Kiri Braisher
 channels:
   - conda-forge
   - defaults
@@ -15,5 +16,6 @@ dependencies:
   - osgeo
   - os
   - math
+  - tkinter
   
   
