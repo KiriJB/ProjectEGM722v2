@@ -1,21 +1,19 @@
 name: ProjectEGM722v2
 author: Kiri Braisher
 channels:
-  - conda-forge
   - defaults
+  - conda-forge
 dependencies:
   - python=3.9
   - pandas
   - geopandas
+  - cartopy
   - numpy
   - matplotlib
   - shapely
   - pathlib
   - rasterio
-  - earthaccess
   - osgeo
-  - os
-  - math
-  - tkinter
-  
-  
+  - earthaccess
+  - colorama
+  - scipy
