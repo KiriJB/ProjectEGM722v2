@@ -106,16 +106,16 @@ To run the script from the command prompt:
 - Change the directory to the cloned repository![ref9]
 - To run the code, type and press enter:![ref10]
 
-[ref1]: RMImages\Image1.png
-[ref2]: RMImages\Image2.png
-[ref3]: RMImages\Image3.png
-[ref4]: RMImages\Image4.png
-[ref5]: RMImages\Image5.png
-[ref6]: RMImages\Image6.png
-[ref7]: RMImages\Image7.png
-[ref8]: RMImages\Image8.png
-[ref9]: RMImages\Image9.png
-[ref10]: RMImages\Image10.png
+[ref1]: RMImages/Image1.png
+[ref2]: RMImages/Image2.png
+[ref3]: RMImages/Image3.png
+[ref4]: RMImages/Image4.png
+[ref5]: RMImages/Image5.png
+[ref6]: RMImages/Image6.png
+[ref7]: RMImages/Image7.png
+[ref8]: RMImages/Image8.png
+[ref9]: RMImages/Image9.png
+[ref10]: RMImages/Image10.png
 
 
 ## License
