@@ -15,7 +15,6 @@ from matplotlib.widgets import Cursor
 import math
 import os
 
-
 def get_dem_data():
     """
     Upload a polygon shapefile to obtain boundary coordinates these are used by the earth access
@@ -28,12 +27,21 @@ def get_dem_data():
     try:
         while True:
             boundary = input(Fore.LIGHTBLUE_EX + "\n\nEnter the name of the Shapefile that you have saved to the Data "
-                                                 "folder, that you wish to use \n for this analysis ie.purbeck_boundary.shp:\n" + Fore.GREEN)
+                                                 "folder, that you wish to use \n for this analysis "
+                                                 "ie.andorra_country_boundary.shp:\n" + Fore.GREEN)
+            if not boundary:
+                print('You did not enter a filename. Try Again!')
+                boundary = input(
+                    Fore.LIGHTBLUE_EX + "\n\nEnter the name of the Shapefile that you have saved to the Data "
+                                        "folder, that you wish to use \n for this analysis "
+                                        "ie.andorra_country_boundary.shp:\n" + Fore.GREEN)
+
 
             # Example shape files you could use that are stored in the data folder
             # Liechtenstein_Country_Boundary.shp (liechtenstein), purbeck_boundary.shp
             # Andorra_Country_Boundary.shp (Andorra), Counties.shp (Northern Ireland)
-            # Djibouti_Country_Boundary.shp (Djibouti), Maine_State_Boundary_Polygon_Feature.shp(Maine, USA)
+            # Djibouti_Country_Boundary.shp (Djibouti)
+
             boundary_path = 'Data\\' + str(boundary)
             #boundary_path = ''
 
@@ -42,7 +50,7 @@ def get_dem_data():
                 print(Fore.LIGHTYELLOW_EX + "\nYay! File found, please wait while we find DEM data for this area from NASA Earthdata.")
                 break
             else:
-                print(Fore.LIGHTYELLOW_EX + "\nFile does not exist. Please enter a valid filename. (ie. counties.shp)")
+                print(Fore.LIGHTYELLOW_EX + "\nFile does not exist. Please enter a valid filename. (ie. andorra_country_boundary.shp)")
 
         boundary = boundary.to_crs(epsg=4326)
 
@@ -77,7 +85,13 @@ def get_dem_data():
         # Create new folder to store DEM csv, png and TIF files
         print(Fore.LIGHTBLUE_EX + "\nWe need to create a folder to store the DEM data in, and set file names\n"
               "for the CSV and PNG files that will be created.")
-        f_name = input("Please enter a name for the folder and files (eg purbeck):\n" + Fore.GREEN)
+        f_name = input("Please enter a name for the folder and files (eg andorra):\n" + Fore.GREEN)
+
+        if not f_name:
+            print('You did not enter a name. Try Again!')
+            boundary = input(
+                Fore.LIGHTBLUE_EX + "\nWe need to create a folder to store the DEM data in, and set file names\n"
+              "for the CSV and PNG files that will be created." + Fore.GREEN)
 
         print(Fore.RED)
         f_name = str(f_name+"_Data")
@@ -162,7 +176,8 @@ def display_tiff(transform1, elevation_data1):
                 end_point = [lat, lon]
                 print(Fore.LIGHTYELLOW_EX + 'End point:', end_point)
 
-        root.withdraw()  # close tkinter window
+        # hide tkinter window
+        root.withdraw()
 
         # Draw a line between two points on the DEM
         plt.plot([start_point[0], end_point[0]], [start_point[1], end_point[1]], color='red')
@@ -404,7 +419,8 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
     try:
         print(Fore.LIGHTYELLOW_EX + "\nSelected elevation profile distance in metres " + str(max_dist) + "(m)\n")
 
-        str_question = (Fore.LIGHTBLUE_EX + "Split the elevation profile into subplots in metres \nie if the profile distance is "
+        str_question = (Fore.LIGHTBLUE_EX + "Split the elevation profile into subplots in metres \n"
+                                            "ie if the profile distance is "
                         "9,600m you could enter 2500 to split the profile into 4 x 2,500m subplots,\n"
                         "enter 1 to not split the profile over numerous subplots:\n ")
 
@@ -417,9 +433,11 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
         elif max_dist >= xsection_dist:
             number_of_plots = math.floor(max_dist / xsection_dist) + 1
 
+        # set the figure size
         fig, ax = plt.subplots(number_of_plots, ncols=1,
                                figsize=(12, 4 * number_of_plots) if number_of_plots > 1 else (12, 4))
-        # sub plot title
+
+        # set the subplot title
         fig.suptitle('Elevation Profile \n' + str(round(point1[0], 6)) + ', ' + str(round(point1[1], 6)) +
                      ' to ' + str(round(point2[0], 6)) + ', ' + str(round(point2[1], 6)) + ', ' +
                      str(max_dist) + 'm \n', fontweight='bold')
@@ -447,7 +465,6 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
             y_values = sub_list['Elevation']  # y-values are the elevations at each distance
             baseline = 0
 
-
             # Interpolate elevation values using spline interpolation
             tck = splrep(x_values, y_values)
             x_new = np.linspace(min(x_values), max(x_values), 1000)
@@ -466,7 +483,6 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
             ax_i.set_xlabel('Distance (m)', fontweight='bold')
             ax_i.set_ylabel('Elevation (m)', fontweight='bold')
             # Fill between the curve and the baseline
-            #ax_i.fill_between(x_values, y_lower_values, y_upper_values, color='palegreen', alpha=0.5)
             ax_i.fill_between(x_new, y_lower_values, y_upper_values, color='palegreen', alpha=0.5)
             ax_i.grid(True)
             n += 1
