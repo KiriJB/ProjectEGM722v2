@@ -9,8 +9,11 @@ outputs: Geotiff of the shapefile polygon area
          PNG image file of the generated elevation profile  
          PDF of the generated elevation profile 
 
-A python script that creates an elevation profile between 2 user specified points, from a geotiff image generated from 
-NASA earthdata for an area specified by a polygon shapefile.
+A python script that creates an elevation profile between 2 user specified points.
+A polygon shapefile is used to get DEM data from NASA Earthdata, raster DEM data (GeoTIFF) is displayed using Matplotlib
+the user can click 2 points on the DEM for the start and end points of the elevation profile,
+the user is prompted to input the number of points to use along the elevation profile and to enter the distance to use 
+to separate the profile into subplots.
 
 The Python code, data files and repository can be accessed here: <http://github.com/KiriJB/ProjectEGM722v2>
 
@@ -19,13 +22,13 @@ Guide to setting up Anaconda with GitHub and creating an environment from an env
 - Download and install Anaconda from the [[official website](https://www.anaconda.com/products/distribution)].
 - Follow the installation instructions for your operating system. 
 ## Set up GitHub: 
-- If you don't have a GitHub account, sign up for one at [[GitHub](https://github.com)] 
-## Install GitHub desktop:
+- If you don't have a GitHub account, sign up for one at [[GitHub](https://github.com)]
+## Install GitHub desktop
 - This is not a prerequisite, but I find the GitHub desktop interface more user-friendly and intuitive.
 - Follow the instructions here to download and install GitHub Desktop[[GitHub](https://docs.github.com/en/desktop/installing-and-authenticating-to-github-desktop/installing-github-desktop)]
 ## Fork and Clone your GitHub repository: 
 
-- Click the fork button to fork ![ref1] the repository at http://github.com/KiriJB/ProjectEGM722v2 and have a copy in your own GitHub repository.
+- Click the fork button in GitHub web interface to fork ![ref1] the repository at http://github.com/KiriJB/ProjectEGM722v2 and have a copy in your own GitHub repository.
 - There should only be one branch named "main", which is the branch you need to fork. After clicking on the fork button and the new branch is created, please take note of its new location, which should look something like [http://www.github.com/<your_name>/ProjectEGM722v2](http://www.github.com/%3cyour_name%3e/ProjectEGM722v2).
 - To clone the repository so you have a copy stored locally on your device. Open a terminal (Command Prompt on Windows or Terminal on macOS/Linux). 
 - Navigate to the directory where you want to clone your repository.
