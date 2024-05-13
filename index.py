@@ -38,7 +38,6 @@ def get_dem_data():
                                         "folder, that you wish to use \n for this analysis "
                                         "ie.andorra_country_boundary.shp:\n" + Fore.GREEN)
 
-
             # Example shape files you could use that are stored in the data folder
             # Liechtenstein_Country_Boundary.shp (liechtenstein), purbeck_boundary.shp
             # Andorra_Country_Boundary.shp (Andorra), Counties.shp (Northern Ireland)

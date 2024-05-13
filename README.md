@@ -71,8 +71,8 @@ Guide to setting up Anaconda with GitHub and creating an environment from an env
 - You should then change the permissions of the new netrc file so other users cannot access it.
 ## Test Data
 In the 'Data' folder located at C:\Users\<your\_name>\ProjectEGM722v2\Data, you can find several shape files that have already been saved for test purposes (Table 1). Alternatively, if you prefer, you can use your own polygon shapefile of an area of your choice. However, it's **important** to note that the shape file and its associated files should be saved in the 'Data' folder. This is necessary for the Python script to locate the shape file.
-If you want to change the location of the shapefile you will need to comment out lines 29-37 and 45
-and uncomment line 46, adding the path to your shape file between the ''.
+If you want to change the location of the shapefile you will need to comment out lines 30-39 and 46
+and uncomment line 47, adding the path to your shape file between the ''.
 
 |Name of Shapefile|Description of Shapefile|
 | :-: | :-: |
