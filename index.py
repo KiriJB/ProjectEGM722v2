@@ -44,14 +44,16 @@ def get_dem_data():
             # Djibouti_Country_Boundary.shp (Djibouti)
 
             boundary_path = 'Data\\' + str(boundary)
-            #boundary_path = ''
+            # boundary_path = ''
 
             if os.path.exists(boundary_path):
                 boundary = gpd.read_file(boundary_path)
-                print(Fore.LIGHTYELLOW_EX + "\nYay! File found, please wait while we find DEM data for this area from NASA Earthdata.")
+                print(Fore.LIGHTYELLOW_EX + "\nYay! File found, please wait while we find DEM data "
+                                            "for this area from NASA Earthdata.")
                 break
             else:
-                print(Fore.LIGHTYELLOW_EX + "\nFile does not exist. Please enter a valid filename. (ie. andorra_country_boundary.shp)")
+                print(Fore.LIGHTYELLOW_EX + "\nFile does not exist. Please enter a "
+                                            "valid filename. (ie. andorra_country_boundary.shp)")
 
         boundary = boundary.to_crs(epsg=4326)
 
@@ -91,9 +93,9 @@ def get_dem_data():
         # check for user input
         if not f_name:
             print('You did not enter a name. Try Again!')
-            boundary = input(
+            f_name = input(
                 Fore.LIGHTBLUE_EX + "\nWe need to create a folder to store the DEM data in, and set file names\n"
-              "for the CSV and PNG files that will be created." + Fore.GREEN)
+                "for the CSV and PNG files that will be created.\n" + Fore.GREEN)
 
         print(Fore.RED)
         f_name = str(f_name+"_Data")
@@ -164,7 +166,6 @@ def display_tiff(transform1, elevation_data1):
         plt.colorbar(label='Elevation (m)', shrink=0.7)
         cursor = Cursor(plt.gca(), useblit=True, color='red', linewidth=1)
 
-
         print(Fore.LIGHTBLUE_EX + "Click 2 points on the map to draw a line that will be used for "
                                   "the elevation profile:")
         # Get user clicks using ginput
@@ -207,10 +208,8 @@ def display_tiff(transform1, elevation_data1):
         # Step 7 - Display elevation profile
         display_elevation_profile(gdf_pcs_copy, start_point, end_point, min_height, max_height, max_dist)
 
-
     except Exception as e:
         print(Back.RED + 'An error occurred in the display_tiff function.', e)
-
 
 
 def check_integer(str_input):
@@ -481,7 +480,6 @@ def display_elevation_profile(gdf_pcs_copy, point1, point2, min_height, max_heig
             ax_i.plot(x_new, y_smooth, color='seagreen')
 
             ax_i.set_ylim(min_height - 20, max_height + 20)
-            x = [new_count - add_count, new_count]
             ax_i.set_xlim(new_count - add_count, new_count)
             ax_i.set_xlabel('Distance (m)', fontweight='bold')
             ax_i.set_ylabel('Elevation (m)', fontweight='bold')
